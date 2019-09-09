@@ -16,8 +16,6 @@ namespace NCoreCoder.TestProject
 
         protected override Task AfterAsync(MethodInfo targetMethod, object[] args)
         {
-            IsAfter = true;
-
             Console.WriteLine($"AfterAsync {targetMethod.Name}");
 
             return base.AfterAsync(targetMethod, args);
