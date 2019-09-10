@@ -1,10 +1,10 @@
 # NCoreCoder.Framework
 > Author NCoreCode
->> Blog https://www.cnblogs.com/NCoreCoder/
+>> [My Blog](https://www.cnblogs.com/NCoreCoder/)
 
 # Develoment Tasks
-> 2019/9/9 Add Aop(Aspect Oriented Programming)
->> Sample: https://www.cnblogs.com/NCoreCoder/p/11492755.html
-> 2019/9/10
->> Add propety inject
->> Update Reflection for AspectCore.Extensions.Reflection url(https://github.com/dotnetcore/AspectCore-Framework)
+* 2019/9/9
+*  Add Aop(Aspect Oriented Programming)
+[Sample](https://www.cnblogs.com/NCoreCoder/p/11492755.html)
+* 2019/9/10
+* Add propety inject, Update Reflection for [AspectCore.Extensions.Reflection](https://github.com/dotnetcore/AspectCore-Framework)
