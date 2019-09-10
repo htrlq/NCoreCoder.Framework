@@ -12,19 +12,9 @@ namespace Sample.Web.Controllers
     {
         // GET api/values
         [HttpGet]
-        public async Task<IEnumerable<string>> Get([FromServices] ITestProxy testProxy)
+        public IEnumerable<string> Get()
         {
-            testProxy.Test();
-            var result = testProxy.TestInt();
-            await testProxy.TestAsync();
-            var resuktAsync = await testProxy.ResultAsync();
-
-            if (result > resuktAsync)
-            {
-                Console.WriteLine($"hello");
-            }
-
-            return new string[] { "value1", "value2", $"{result}", $"{resuktAsync}" };
+            return new string[] { "value1", "value2"};
         }
     }
 }

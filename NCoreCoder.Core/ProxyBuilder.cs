@@ -1,6 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using AspectCore.Extensions.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -12,9 +14,17 @@ namespace NCoreCoder.Aop
         private TService _instance;
         private IProxyFactory _proxyFactory = null;
 
-        public void SetFactory(IProxyFactory proxyFactory)
+        private void SetFactory(IProxyFactory proxyFactory)
         {
             _proxyFactory = proxyFactory;
+        }
+
+        private void Inject(Type serviceType, IServiceProvider serviceProvider)
+        {
+            if (_proxyFactory.TryGetInject(serviceType, out InjectFlow injectFlow))
+            {
+                injectFlow.Inject(_instance, serviceProvider);
+            }
         }
 
         public static TService Create(IServiceProvider serviceProvider)
@@ -26,15 +36,16 @@ namespace NCoreCoder.Aop
 
             ((ProxyBuilder<TService,TImplementation>)proxy)._instance = instance;
             ((ProxyBuilder<TService, TImplementation>)proxy).SetFactory(factory);
+            ((ProxyBuilder<TService, TImplementation>)proxy).Inject(typeof(TService),serviceProvider);
 
             return (TService)proxy;
         }
 
         protected override object Invoke(MethodInfo targetMethod, object[] args)
         {
-            if (_proxyFactory.TryGetAttribute(targetMethod, out AopAttribute aopAttribute))
+            if (_proxyFactory.TryGetAop(targetMethod, out AopAttribute aopAttribute))
             {
-                var task = aopAttribute.ExecuteAsync(targetMethod, _instance, args);
+                var task = aopAttribute.ExecuteAsync(targetMethod.GetReflector(), _instance, args);
 
                 var awaiter = task.ConfigureAwait(true).GetAwaiter();
                 var result = awaiter.GetResult();

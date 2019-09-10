@@ -1,15 +1,19 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace NCoreCoder.Aop
 {
     internal class ProxyFactory : IProxyFactory
     {
-        private ConcurrentDictionary<MethodInfo, AopAttribute> dictionary = new ConcurrentDictionary<MethodInfo, AopAttribute>();
+        private ConcurrentDictionary<MethodInfo, AopAttribute> attributes = new ConcurrentDictionary<MethodInfo, AopAttribute>();
+        private ConcurrentDictionary<Type, InjectFlow> injectFlows = new ConcurrentDictionary<Type, InjectFlow>();
 
-        public bool TryGetAttribute(MethodInfo targetMethod, out AopAttribute aopAttribute)
+        public bool TryGetAop(MethodInfo targetMethod, out AopAttribute aopAttribute)
         {
-            if (dictionary.TryGetValue(targetMethod, out aopAttribute))
+            if (attributes.TryGetValue(targetMethod, out aopAttribute))
             {
                 return aopAttribute != null;
             }
@@ -17,9 +21,25 @@ namespace NCoreCoder.Aop
             {
                 aopAttribute = targetMethod.GetCustomAttribute<AopAttribute>();
 
-                dictionary.TryAdd(targetMethod, aopAttribute);
+                attributes.TryAdd(targetMethod, aopAttribute);
 
                 return aopAttribute != null;
+            }
+        }
+
+        public bool TryGetInject(Type targetType, out InjectFlow injectFlow)
+        {
+            if (injectFlows.TryGetValue(targetType, out injectFlow))
+            {
+                return injectFlow != null;
+            }
+            else
+            {
+                injectFlow = new InjectFlow(targetType);
+
+                injectFlows.TryAdd(targetType, injectFlow);
+
+                return injectFlow != null;
             }
         }
     }
