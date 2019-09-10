@@ -64,7 +64,9 @@ namespace NCoreCoder.Aop
 
         public InjectFlow(Type serviceType)
         {
-            propertys = serviceType.GetProperties()
+            propertys = serviceType
+                .GetTypeInfo()
+                .GetProperties()
                 .Where(_property => _property.GetReflector().GetCustomAttribute<InjectAttribute>() != null);
         }
 
@@ -76,8 +78,7 @@ namespace NCoreCoder.Aop
                 var serviceType = attribute.SourceType;
                 var service = serviceProvider.GetRequiredService(serviceType);
 
-                var setMethod = property.GetSetMethod();
-                setMethod.Invoke(instance, new[] { service });
+                property.GetReflector().SetValue(instance, service);
             }
         }
     }
