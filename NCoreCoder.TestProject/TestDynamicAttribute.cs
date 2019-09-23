@@ -1,13 +1,12 @@
 ﻿using AspectCore.Extensions.Reflection;
 using NCoreCoder.Aop;
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace NCoreCoder.TestProject
 {
     [AttributeUsage(AttributeTargets.Method)]
-    internal class TestAttribute:AopAttribute
+    internal class TestDynamicAttribute: DynamicAttribute
     {
         protected override Task BeforeAsync(MethodReflector targetMethod, object[] args)
         {

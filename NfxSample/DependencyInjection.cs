@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace NCoreCoder.TestProject
+namespace NfxSample
 {
     public class DependencyInjection
     {

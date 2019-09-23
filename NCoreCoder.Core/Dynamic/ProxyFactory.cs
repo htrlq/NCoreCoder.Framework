@@ -8,22 +8,22 @@ namespace NCoreCoder.Aop
 {
     internal class ProxyFactory : IProxyFactory
     {
-        private ConcurrentDictionary<MethodInfo, AopAttribute> attributes = new ConcurrentDictionary<MethodInfo, AopAttribute>();
+        private ConcurrentDictionary<MethodInfo, DynamicAttribute> attributes = new ConcurrentDictionary<MethodInfo, DynamicAttribute>();
         private ConcurrentDictionary<Type, InjectFlow> injectFlows = new ConcurrentDictionary<Type, InjectFlow>();
 
-        public bool TryGetAop(MethodInfo targetMethod, out AopAttribute aopAttribute)
+        public bool TryGetAop(MethodInfo targetMethod, out DynamicAttribute dynamicAttribute)
         {
-            if (attributes.TryGetValue(targetMethod, out aopAttribute))
+            if (attributes.TryGetValue(targetMethod, out dynamicAttribute))
             {
-                return aopAttribute != null;
+                return dynamicAttribute != null;
             }
             else
             {
-                aopAttribute = targetMethod.GetCustomAttribute<AopAttribute>();
+                dynamicAttribute = targetMethod.GetCustomAttribute<DynamicAttribute>();
 
-                attributes.TryAdd(targetMethod, aopAttribute);
+                attributes.TryAdd(targetMethod, dynamicAttribute);
 
-                return aopAttribute != null;
+                return dynamicAttribute != null;
             }
         }
 

@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace NCoreCoder.Aop
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class AopAttribute:Attribute
+    public class DynamicAttribute:Attribute
     {
 #if DEBUG
         public bool IsBefore { get; set; }

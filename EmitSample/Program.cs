@@ -9,11 +9,6 @@ namespace EmitSample
         {
             Console.WriteLine("Hello World!");
 
-            var instance = new Service();
-            var serviceType = typeof(Service);
-
-            var targetMethod = serviceType.GetMethod("Invoke");
-
         }
     }
 

@@ -5,7 +5,7 @@ using Xunit;
 
 namespace NCoreCoder.TestProject
 {
-    public class TestAop
+    public class TestDynamic
     {
         [Fact]
         public async void Singleton()
@@ -14,7 +14,7 @@ namespace NCoreCoder.TestProject
                 new DependencyInjection()
                 .ConfigService(services =>
                 {
-                    services.AddNCoreCoderAop<ITest, Test>(ServiceLifetime.Singleton);
+                    services.AddDynamicAop<ITest, Test>(ServiceLifetime.Singleton);
                 });
 
             var test = instance.GetRequriedService<ITest>();
@@ -37,7 +37,7 @@ namespace NCoreCoder.TestProject
                 new DependencyInjection()
                 .ConfigService(services =>
                 {
-                    services.AddNCoreCoderAop<ITest, Test>(ServiceLifetime.Transient);
+                    services.AddDynamicAop<ITest, Test>(ServiceLifetime.Transient);
                 });
 
             var test = instance.GetRequriedService<ITest>();
@@ -60,20 +60,23 @@ namespace NCoreCoder.TestProject
                 new DependencyInjection()
                 .ConfigService(services =>
                 {
-                    services.AddNCoreCoderAop<ITest, Test>(ServiceLifetime.Scoped);
+                    services.AddDynamicAop<ITest, Test>(ServiceLifetime.Scoped);
                 });
 
-            var test = instance.GetRequriedService<ITest>();
+            using (var serviceScope = instance.CreateScoped())
+            {
+                var test = serviceScope.GetRequriedService<ITest>();
 
-            test.TestVoid();
+                test.TestVoid();
 
-            var resultInt = test.TestInt();
-            Assert.Equal<int>(1000, resultInt);
+                var resultInt = test.TestInt();
+                Assert.Equal<int>(1000, resultInt);
 
-            await test.TestAsync();
+                await test.TestAsync();
 
-            var asyncInt = await test.TestIntAsync();
-            Assert.Equal<int>(900, asyncInt);
+                var asyncInt = await test.TestIntAsync();
+                Assert.Equal<int>(900, asyncInt);
+            }
         }
     }
 
@@ -86,8 +89,8 @@ namespace NCoreCoder.TestProject
                 new DependencyInjection()
                 .ConfigService(services =>
                 {
-                    services.AddNCoreCoderAop<ITest, Test>(ServiceLifetime.Singleton);
-                    services.AddNCoreCoderAop<ITestPropetyInject, TestPropetyInjectImpl>(ServiceLifetime.Singleton);
+                    services.AddDynamicAop<ITest, Test>(ServiceLifetime.Singleton);
+                    services.AddDynamicAop<ITestPropetyInject, TestPropetyInjectImpl>(ServiceLifetime.Singleton);
                 });
 
             var test = instance.GetRequriedService<ITestPropetyInject>();
@@ -110,8 +113,8 @@ namespace NCoreCoder.TestProject
                 new DependencyInjection()
                 .ConfigService(services =>
                 {
-                    services.AddNCoreCoderAop<ITest, Test>(ServiceLifetime.Transient);
-                    services.AddNCoreCoderAop<ITestPropetyInject, TestPropetyInjectImpl>(ServiceLifetime.Transient);
+                    services.AddDynamicAop<ITest, Test>(ServiceLifetime.Transient);
+                    services.AddDynamicAop<ITestPropetyInject, TestPropetyInjectImpl>(ServiceLifetime.Transient);
                 });
 
             var test = instance.GetRequriedService<ITestPropetyInject>();
@@ -134,8 +137,8 @@ namespace NCoreCoder.TestProject
                 new DependencyInjection()
                 .ConfigService(services =>
                 {
-                    services.AddNCoreCoderAop<ITest, Test>(ServiceLifetime.Scoped);
-                    services.AddNCoreCoderAop<ITestPropetyInject, TestPropetyInjectImpl>(ServiceLifetime.Scoped);
+                    services.AddDynamicAop<ITest, Test>(ServiceLifetime.Scoped);
+                    services.AddDynamicAop<ITestPropetyInject, TestPropetyInjectImpl>(ServiceLifetime.Scoped);
                 });
 
             var test = instance.GetRequriedService<ITestPropetyInject>();

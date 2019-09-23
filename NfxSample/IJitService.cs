@@ -1,16 +1,12 @@
 ﻿using System.Threading.Tasks;
 
-namespace NCoreCoder.TestProject
+namespace NfxSample
 {
-    public interface ITest
+    public interface IJitService
     {
-        [TestDynamic]
         void TestVoid();
-        [TestDynamic]
         int TestInt();
-        [TestDynamic]
         Task TestAsync();
-        [TestDynamic]
         Task<int> TestIntAsync();
     }
 }

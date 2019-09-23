@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace NCoreCoder.Aop
 {
-    public class ProxyBuilder<TService, TImplementation> : DispatchProxy
+    public class ProxyGenerator<TService, TImplementation> : DispatchProxy
         where TImplementation:TService
     {
         private TService _instance;
@@ -29,21 +29,21 @@ namespace NCoreCoder.Aop
 
         public static TService Create(IServiceProvider serviceProvider)
         {
-            object proxy = Create<TService, ProxyBuilder<TService, TImplementation>>();
+            object proxy = Create<TService, ProxyGenerator<TService, TImplementation>>();
 
             var instance = serviceProvider.GetRequiredService<TImplementation>();
             var factory = serviceProvider.GetRequiredService<IProxyFactory>();
 
-            ((ProxyBuilder<TService,TImplementation>)proxy)._instance = instance;
-            ((ProxyBuilder<TService, TImplementation>)proxy).SetFactory(factory);
-            ((ProxyBuilder<TService, TImplementation>)proxy).Inject(typeof(TService),serviceProvider);
+            ((ProxyGenerator<TService,TImplementation>)proxy)._instance = instance;
+            ((ProxyGenerator<TService, TImplementation>)proxy).SetFactory(factory);
+            ((ProxyGenerator<TService, TImplementation>)proxy).Inject(typeof(TService),serviceProvider);
 
             return (TService)proxy;
         }
 
         protected override object Invoke(MethodInfo targetMethod, object[] args)
         {
-            if (_proxyFactory.TryGetAop(targetMethod, out AopAttribute aopAttribute))
+            if (_proxyFactory.TryGetAop(targetMethod, out DynamicAttribute aopAttribute))
             {
                 var task = aopAttribute.ExecuteAsync(targetMethod.GetReflector(), _instance, args);
 
