@@ -57,8 +57,9 @@ namespace NCoreCoder.Aop
             FieldBuilder[] paramArray)
         {
             var methodinfos = sourceType
+                .GetTypeInfo()
                 .GetMethods()
-                .Where(_method => _method.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
+                .Where(_method=>!ignoreMethods.Contains(_method.Name))
                 .ToArray();
 
             for (var i = 0; i < methodinfos.Length; i++)
@@ -97,6 +98,11 @@ namespace NCoreCoder.Aop
                 var method = ilGenerator.DeclareLocal(typeof(MethodInfo));
                 var parameters = ilGenerator.DeclareLocal(typeof(object[]));
 
+                var _returnType = methodInfo.ReturnType;
+                var isAsync = _returnType == typeof(Task) || _returnType.BaseType == typeof(Task);
+
+                var isProxy = methodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null;
+
                 ilGenerator.AddLdcI4(paramTypes.Length);
                 ilGenerator.Emit(OpCodes.Newarr, typeof(object));
 
@@ -113,6 +119,7 @@ namespace NCoreCoder.Aop
                     }
                     ilGenerator.Emit(OpCodes.Stelem_Ref);
                 }
+
                 ilGenerator.Emit(OpCodes.Stloc, parameters);
 
                 //methodInfo
@@ -126,7 +133,7 @@ namespace NCoreCoder.Aop
                 for (int index = 1; index < paramArray.Length; index++)
                 {
                     ilGenerator.Emit(OpCodes.Ldarg_0);
-                    ilGenerator.Emit(OpCodes.Ldfld, paramArray[index]);                  
+                    ilGenerator.Emit(OpCodes.Ldfld, paramArray[index]);
                 }
 
                 //methodInfo
@@ -135,12 +142,9 @@ namespace NCoreCoder.Aop
                 ilGenerator.Emit(OpCodes.Ldloc, parameters);
 
                 //new AopContext(serviceProvider,methods,instance,args);
-                ilGenerator.Emit(OpCodes.Newobj, 
+                ilGenerator.Emit(OpCodes.Newobj,
                 typeof(AopContext).GetReflector().GetMemberInfo().GetConstructors().FirstOrDefault()
                 );
-
-                var _returnType = methodInfo.ReturnType;
-                var isAsync = _returnType == typeof(Task) || _returnType.BaseType == typeof(Task);
 
                 if (isAsync)
                 {
@@ -152,18 +156,18 @@ namespace NCoreCoder.Aop
                         var genericTypeDefinition = typeInfo.GetGenericArguments().Single();
 
                         ilGenerator.Emit(OpCodes.Callvirt,
-                            typeof(AopActors).GetMethod("ExecuteAsync", new[]
+                            typeof(AopActors).GetMethod($"{(isProxy ? "Proxy" : "")}ExecuteAsync", new[]
                             {
-                                typeof(AopContext)
+                            typeof(AopContext)
                             }).MakeGenericMethod(genericTypeDefinition).GetReflector().GetMemberInfo()
                         );
                     }
                     else
                     {
                         ilGenerator.Emit(OpCodes.Callvirt,
-                            typeof(AopActors).GetMethod("InvokeAsync", new[]
+                            typeof(AopActors).GetMethod($"{(isProxy ? "Proxy" : "")}InvokeAsync", new[]
                             {
-                                typeof(AopContext),
+                            typeof(AopContext),
                             }).GetReflector().GetMemberInfo()
                         );
                     }
@@ -172,10 +176,10 @@ namespace NCoreCoder.Aop
                 {
                     //_context.Execute(method, instance, params);
                     // ReSharper disable once AssignNullToNotNullAttribute
-                    ilGenerator.Emit(OpCodes.Callvirt, typeof(AopActors).GetMethod("Execute", new[]
+                    ilGenerator.Emit(OpCodes.Callvirt, typeof(AopActors).GetMethod($"{(isProxy ? "Proxy" : "")}Execute", new[]
                     {
-                        typeof(AopContext),
-                    }).GetReflector().GetMemberInfo());
+                    typeof(AopContext),
+                }).GetReflector().GetMemberInfo());
                 }
 
                 if (_returnType == typeof(void))
@@ -183,8 +187,8 @@ namespace NCoreCoder.Aop
 
                 if (_returnType != typeof(void) && _returnType.IsValueType)
                     ilGenerator.Emit(OpCodes.Unbox_Any, methodInfo.ReturnType);
-                
-                if (! isAsync && methodInfo.ReturnType.IsGenericType)
+
+                if (!isAsync && methodInfo.ReturnType.IsGenericType)
                     ilGenerator.Emit(OpCodes.Castclass, methodInfo.ReturnType);
 
                 ilGenerator.Emit(OpCodes.Ret);

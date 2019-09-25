@@ -103,23 +103,10 @@ namespace NCoreCoder.Aop
             var aopAttribute = MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>();
 
             await aopAttribute.BeforeAsync(MethodInfo.GetReflector(), Args);
-            var methodResult = (Task)MethodInfo.GetReflector().Invoke(Instance, Args);
+            var result = await (Task<TResult>)MethodInfo.GetReflector().Invoke(Instance, Args);
+            await aopAttribute.AfterAsync(MethodInfo.GetReflector(), Instance, Args);
 
-            object result = null;
-
-            await methodResult.ContinueWith(async (_task) =>
-            {
-                var property = _task.GetType().GetProperty("Result");
-
-                result = property.GetValue(_task);
-
-                await aopAttribute.AfterAsync(MethodInfo.GetReflector(), Instance, Args);
-            });
-
-            if (result == null)
-                return default(TResult);
-
-            return await Task.FromResult<TResult>((TResult)result);
+            return result;
         }
 
         public async Task InvokeAsync()
@@ -127,12 +114,8 @@ namespace NCoreCoder.Aop
             var aopAttribute = MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>();
 
             await aopAttribute.BeforeAsync(MethodInfo.GetReflector(), Args);
-            var methodResult = (Task)MethodInfo.GetReflector().Invoke(Instance, Args);
-
-            await methodResult.ContinueWith(async (_task) =>
-            {
-                await aopAttribute.AfterAsync(MethodInfo.GetReflector(), Instance, Args);
-            });
+            await (Task)MethodInfo.GetReflector().Invoke(Instance, Args);
+            await aopAttribute.AfterAsync(MethodInfo.GetReflector(), Instance, Args);
         }
     }
 }

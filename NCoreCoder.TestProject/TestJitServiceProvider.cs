@@ -6,17 +6,17 @@ using Xunit;
 
 namespace NCoreCoder.TestProject
 {
-    public class TestJit
+    public class TestJitServiceProvider
     {
         [Fact]
         public async void Singleton()
         {
             var instance =
                 new DependencyInjection()
-                .ConfigService(services =>
+                .BuilderService(services =>
                 {
                     services.AddSingleton<ITest, Test>();
-                    services.AddJitAop<IJitService, JitService>(ServiceLifetime.Singleton);
+                    services.AddSingleton<IJitService, JitService>();
                 });
 
             var test = instance.GetRequriedService<IJitService>();
@@ -37,10 +37,10 @@ namespace NCoreCoder.TestProject
         {
             var instance =
                 new DependencyInjection()
-                .ConfigService(services =>
+                .BuilderService(services =>
                 {
                     services.AddTransient<ITest, Test>();
-                    services.AddJitAop<IJitService, JitService>(ServiceLifetime.Transient);
+                    services.AddTransient<IJitService, JitService>();
                 });
 
             var test = instance.GetRequriedService<IJitService>();
@@ -61,10 +61,10 @@ namespace NCoreCoder.TestProject
         {
             var instance =
                 new DependencyInjection()
-                .ConfigService(services =>
+                .BuilderService(services =>
                 {
                     services.AddScoped<ITest, Test>();
-                    services.AddJitAop<IJitService, JitService>(ServiceLifetime.Scoped);
+                    services.AddScoped<IJitService, JitService>();
                 });
 
             using (var serviceScope = instance.CreateScoped())
@@ -81,49 +81,6 @@ namespace NCoreCoder.TestProject
                 var asyncInt = await test.TestIntAsync();
                 Assert.Equal<int>(900, asyncInt);
             }
-        }
-    }
-
-    public interface IJitService
-    {
-        void TestVoid();
-        int TestInt();
-        Task TestAsync();
-        Task<int> TestIntAsync();
-    }
-
-    [JitInject]
-    internal class JitService : IJitService
-    {
-        public ITest Test { get; }
-
-        public JitService(ITest test)
-        {
-            Test = test;
-        }
-
-        [TestJit]
-        public Task TestAsync()
-        {
-            return Test.TestAsync();
-        }
-
-        [TestJit]
-        public int TestInt()
-        {
-            return Test.TestInt();
-        }
-
-        [TestJit]
-        public Task<int> TestIntAsync()
-        {
-            return Test.TestIntAsync();
-        }
-
-        [TestJit]
-        public void TestVoid()
-        {
-            Test.TestVoid();
         }
     }
 }

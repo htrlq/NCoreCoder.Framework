@@ -22,10 +22,11 @@ namespace NCoreCoder.Aop
             _assemblyName.Version = new Version(0, 1);
 #if _Nfx
             _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave);
+            _moduleBuilder = _assemblyBuilder.DefineDynamicModule($"Proxy_Module", "1.dll");
 #else
             _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndCollect);
-#endif
             _moduleBuilder = _assemblyBuilder.DefineDynamicModule($"Proxy_Module");
+#endif
             _dictionary = new ConcurrentDictionary<Type, Type>();
         }
 
@@ -68,7 +69,7 @@ namespace NCoreCoder.Aop
             _dictionary.TryAdd(sourceType, proxyType);
 
 #if _Nfx
-            //_assemblyBuilder.Save("1.dll");
+            _assemblyBuilder.Save("1.dll");
 #endif
 
             return proxyType;

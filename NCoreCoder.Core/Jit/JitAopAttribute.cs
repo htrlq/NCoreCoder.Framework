@@ -10,23 +10,23 @@ namespace NCoreCoder.Aop
     {
         public virtual void Before(MethodReflector method, object instance, params object[] param)
         {
-            //Console.WriteLine($"Before Name:{method.Name}");
+            Console.WriteLine($"Before Name:{method.Name}");
         }
 
         public virtual void After(MethodReflector method, object instance, params object[] param)
         {
-            //Console.WriteLine($"After Name:{method.Name}");
+            Console.WriteLine($"After Name:{method.Name}");
         }
 
         public virtual Task BeforeAsync(MethodReflector method, object instance, params object[] param)
         {
-            //Console.WriteLine($"BeforeAsync Name:{method.Name}");
+            Console.WriteLine($"BeforeAsync Name:{method.Name}");
             return Task.CompletedTask;
         }
 
         public virtual Task AfterAsync(MethodReflector method, object instance, params object[] param)
         {
-            //Console.WriteLine($"AfterAsync Name:{method.Name}");
+            Console.WriteLine($"AfterAsync Name:{method.Name}");
             return Task.CompletedTask;
         }
     }

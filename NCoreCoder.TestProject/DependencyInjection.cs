@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using NCoreCoder.Aop;
 
 namespace NCoreCoder.TestProject
 {
@@ -22,6 +23,13 @@ namespace NCoreCoder.TestProject
             func.Invoke(collection);
 
             return new DependencyInjection(collection.BuildServiceProvider());
+        }
+
+        public DependencyInjection BuilderService(Action<IServiceCollection> func)
+        {
+            func.Invoke(collection);
+
+            return new DependencyInjection(collection.BuilderJit());
         }
 
         public TService GetRequriedService<TService>()
