@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NCoreCoder.Aop.Jit;
 
 namespace NCoreCoder.Aop
 {
@@ -61,14 +62,17 @@ namespace NCoreCoder.Aop
             if (typeof(TTarget).GetInterfaces().Length == 0)
                 throw new Exception($"Not inherit interface");
 
-            services.TryAddSingleton<AopActors>();
+            var _attribute = typeof(TSource).GetCustomAttribute<AopActorsAttribute>();
+            var actorsType = _attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType;
+
+            services.TryAddSingleton(actorsType);
 
             var typeBuilderFactory = TypeBuilderFactory.Instance;
 
             var sourceType = typeof(TSource);
             var targetType = typeof(TTarget);
 
-            var proxyType = typeBuilderFactory.CreateType(sourceType, targetType);
+            var proxyType = typeBuilderFactory.CreateType(actorsType,sourceType, targetType);
 
             if (serviceLifetime == ServiceLifetime.Singleton)
             {
@@ -118,7 +122,8 @@ namespace NCoreCoder.Aop
             var sourceType = typeof(TSource);
             var targetType = typeof(TTarget);
 
-            var proxyType = typeBuilderFactory.CreateType(sourceType, targetType);
+            var attribute = sourceType.GetCustomAttribute<AopActorsAttribute>();
+            var proxyType = typeBuilderFactory.CreateType(attribute == null ? typeof(DefaultAopActors) : attribute.ActorsType, sourceType, targetType);
 
             _serviceDescriptors.Add(new ServiceDescriptor(typeof(TTarget),typeof(TTarget), serviceLifetime));
             _serviceDescriptors.Add(new ServiceDescriptor(sourceType, proxyType, serviceLifetime));
@@ -128,7 +133,7 @@ namespace NCoreCoder.Aop
         {
             var services = new ServiceCollection();
 
-            services.TryAddSingleton<AopActors>();
+            services.TryAddSingleton<IAopActors, DefaultAopActors>();
 
             foreach (var descriptor in _serviceDescriptors)
             {
@@ -139,7 +144,8 @@ namespace NCoreCoder.Aop
                 {
                     var typeBuilderFactory = TypeBuilderFactory.Instance;
 
-                    var proxyType = typeBuilderFactory.CreateType(descriptor.ServiceType, descriptor.ImplementationType);
+                    var _attribute = descriptor.ServiceType.GetCustomAttribute<AopActorsAttribute>();
+                    var proxyType = typeBuilderFactory.CreateType(_attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType, descriptor.ServiceType, descriptor.ImplementationType);
 
                     services.Add(new ServiceDescriptor(descriptor.ServiceType, proxyType, descriptor.Lifetime));
                     services.Add(new ServiceDescriptor(descriptor.ImplementationType, descriptor.ImplementationType,
@@ -175,7 +181,7 @@ namespace NCoreCoder.Aop
         {
             var _services = new ServiceCollection();
 
-            _services.TryAddSingleton<AopActors>();
+            _services.TryAddSingleton<IAopActors,DefaultAopActors>();
 
             foreach (var descriptor in services)
             {
@@ -186,7 +192,8 @@ namespace NCoreCoder.Aop
                 {
                     var typeBuilderFactory = TypeBuilderFactory.Instance;
 
-                    var proxyType = typeBuilderFactory.CreateType(descriptor.ServiceType, descriptor.ImplementationType);
+                    var _attribute = descriptor.ServiceType.GetCustomAttribute<AopActorsAttribute>();
+                    var proxyType = typeBuilderFactory.CreateType(_attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType, descriptor.ServiceType, descriptor.ImplementationType);
 
                     _services.Add(new ServiceDescriptor(descriptor.ServiceType, proxyType, descriptor.Lifetime));
                     _services.Add(new ServiceDescriptor(descriptor.ImplementationType, descriptor.ImplementationType,

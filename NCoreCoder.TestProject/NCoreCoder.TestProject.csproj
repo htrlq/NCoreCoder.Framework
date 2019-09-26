@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NCoreCoder.Core\NCoreCoder.Aop.csproj" />
+    <ProjectReference Include="..\NCoreCoder.Aop\NCoreCoder.Aop.csproj" />
   </ItemGroup>
 
 </Project>

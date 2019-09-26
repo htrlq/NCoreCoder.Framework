@@ -30,7 +30,7 @@ namespace NCoreCoder.Aop
             _dictionary = new ConcurrentDictionary<Type, Type>();
         }
 
-        public Type CreateType(Type sourceType,Type targetType)
+        public Type CreateType(Type actorsType, Type sourceType,Type targetType)
         {
             if (_dictionary.TryGetValue(sourceType, out Type resultType))
                 return resultType;
@@ -39,7 +39,7 @@ namespace NCoreCoder.Aop
 
             var types = new Type[]
             {
-                typeof(AopActors),
+                actorsType,
                 typeof(IServiceProvider),
                 targetType,
             };
@@ -57,6 +57,7 @@ namespace NCoreCoder.Aop
             targetType.InjectConstructor(targetType, typeBuilder, paramArray);
 
             targetType.InjectMethod(typeBuilder,
+                actorsType,
                 paramArray
             );
 

@@ -53,7 +53,7 @@ namespace NCoreCoder.Aop
             ilGenerator.Emit(OpCodes.Ret);
         }
 
-        public static void InjectMethod(this Type sourceType, TypeBuilder typeBuilder,
+        public static void InjectMethod(this Type sourceType, TypeBuilder typeBuilder, Type actorsType,
             FieldBuilder[] paramArray)
         {
             var methodinfos = sourceType
@@ -97,11 +97,10 @@ namespace NCoreCoder.Aop
 
                 var method = ilGenerator.DeclareLocal(typeof(MethodInfo));
                 var parameters = ilGenerator.DeclareLocal(typeof(object[]));
+                var context = ilGenerator.DeclareLocal(typeof(IAopContext));
 
                 var _returnType = methodInfo.ReturnType;
                 var isAsync = _returnType == typeof(Task) || _returnType.BaseType == typeof(Task);
-
-                var isProxy = methodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null;
 
                 ilGenerator.AddLdcI4(paramTypes.Length);
                 ilGenerator.Emit(OpCodes.Newarr, typeof(object));
@@ -146,6 +145,8 @@ namespace NCoreCoder.Aop
                 typeof(AopContext).GetReflector().GetMemberInfo().GetConstructors().FirstOrDefault()
                 );
 
+                ilGenerator.Emit(OpCodes.Stloc, context);
+
                 if (isAsync)
                 {
                     //_context.Execute(method, instance, params);
@@ -156,30 +157,31 @@ namespace NCoreCoder.Aop
                         var genericTypeDefinition = typeInfo.GetGenericArguments().Single();
 
                         ilGenerator.Emit(OpCodes.Callvirt,
-                            typeof(AopActors).GetMethod($"{(isProxy ? "Proxy" : "")}ExecuteAsync", new[]
+                            actorsType.GetMethod($"ExecuteAsync", new[]
                             {
-                            typeof(AopContext)
-                            }).MakeGenericMethod(genericTypeDefinition).GetReflector().GetMemberInfo()
+                            typeof(IAopContext)
+                            }).MakeGenericMethod(genericTypeDefinition)
                         );
                     }
                     else
                     {
                         ilGenerator.Emit(OpCodes.Callvirt,
-                            typeof(AopActors).GetMethod($"{(isProxy ? "Proxy" : "")}InvokeAsync", new[]
+                            actorsType.GetMethod($"InvokeAsync", new[]
                             {
-                            typeof(AopContext),
-                            }).GetReflector().GetMemberInfo()
+                            typeof(IAopContext),
+                            })
                         );
                     }
                 }
                 else
                 {
+                    ilGenerator.Emit(OpCodes.Ldloc, context);
                     //_context.Execute(method, instance, params);
                     // ReSharper disable once AssignNullToNotNullAttribute
-                    ilGenerator.Emit(OpCodes.Callvirt, typeof(AopActors).GetMethod($"{(isProxy ? "Proxy" : "")}Execute", new[]
+                    ilGenerator.Emit(OpCodes.Callvirt, actorsType.GetMethod($"Execute", new[]
                     {
-                    typeof(AopContext),
-                }).GetReflector().GetMemberInfo());
+                    typeof(IAopContext),
+                    }));
                 }
 
                 if (_returnType == typeof(void))

@@ -67,8 +67,18 @@ namespace NCoreCoder.Aop
     //        return result;
     //    }
     //}
+    public  interface  IAopContext
+    {
+        IServiceProvider ServiceProvider { get; }
+        MethodInfo MethodInfo { get; }
+        object Instance { get; }
+        object[] Args { get; }
+        object Execute();
+        Task<TResult> ExecuteAsync<TResult>();
+        Task InvokeAsync();
+    }
 
-    public class AopContext
+    public class AopContext: IAopContext
     {
         public IServiceProvider ServiceProvider { get; }
         public MethodInfo MethodInfo { get; }
@@ -82,6 +92,7 @@ namespace NCoreCoder.Aop
             //typeof(IServiceProvider),
 
             ServiceProvider = serviceProvider;
+
             MethodInfo = methodInfo;
             Instance = instance;
             Args = args;
