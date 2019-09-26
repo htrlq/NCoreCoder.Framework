@@ -14,3 +14,5 @@
 * Add Support .Net Core 3.0
 * Add Auto Inject Aop
 * [Sample](https://www.cnblogs.com/NCoreCoder/p/11586797.html)
+* 2019/9/26
+* Add Custom Aop Actors
