@@ -73,6 +73,7 @@
     <Compile Include="..\NCoreCoder.Aop\Jit\ILGeneratorExtension.cs" />
     <Compile Include="..\NCoreCoder.Aop\Jit\JitAopAttribute.cs" />
     <Compile Include="..\NCoreCoder.Aop\Jit\TypeBuilderFactory.cs" />
+	<Compile Include="..\NCoreCoder.Aop\Jit\AopActorsAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\NCoreCoder.Aop\ServiceCollectionExtension.cs" />
   </ItemGroup>

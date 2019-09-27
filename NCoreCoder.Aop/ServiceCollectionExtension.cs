@@ -56,50 +56,20 @@ namespace NCoreCoder.Aop
             return ProxyGenerator<TService, TImplementation>.Create(serviceProvider);
         }
 
-        public static IServiceCollection AddJitAop<TSource, TTarget>(this IServiceCollection services, ServiceLifetime serviceLifetime)
-            where TTarget : class, TSource
-        {
-            if (typeof(TTarget).GetInterfaces().Length == 0)
-                throw new Exception($"Not inherit interface");
-
-            var _attribute = typeof(TSource).GetCustomAttribute<AopActorsAttribute>();
-            var actorsType = _attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType;
-
-            services.TryAddSingleton(actorsType);
-
-            var typeBuilderFactory = TypeBuilderFactory.Instance;
-
-            var sourceType = typeof(TSource);
-            var targetType = typeof(TTarget);
-
-            var proxyType = typeBuilderFactory.CreateType(actorsType,sourceType, targetType);
-
-            if (serviceLifetime == ServiceLifetime.Singleton)
-            {
-                services.TryAddSingleton<TTarget>();
-                services.TryAddSingleton(sourceType, proxyType);
-            }
-
-            if (serviceLifetime == ServiceLifetime.Scoped)
-            {
-                services.TryAddScoped<TTarget>();
-                services.TryAddScoped(sourceType, proxyType);
-            }
-
-            if (serviceLifetime == ServiceLifetime.Transient)
-            {
-                services.TryAddTransient<TTarget>();
-                services.TryAddTransient(sourceType, proxyType);
-            }
-
-            return services;
-        }
-
         public static IServiceProvider BuilderJit(this IServiceCollection services)
         {
             var builder = new JitAopBuilder(services);
 
             return builder.BuilderServiceProvider();
+        }
+
+        public static IServiceCollection TryAddNoRepeat(this IServiceCollection service,
+            ServiceDescriptor serviceDescriptor)
+        {
+            if (service.Any(_servceDescript => _servceDescript.ServiceType != serviceDescriptor.ServiceType))
+                service.Add(serviceDescriptor);
+
+            return service;
         }
     }
 
@@ -133,23 +103,27 @@ namespace NCoreCoder.Aop
         {
             var services = new ServiceCollection();
 
-            services.TryAddSingleton<IAopActors, DefaultAopActors>();
+            var typeBuilderFactory = new TypeBuilderFactory();
+            services.TryAddSingleton<DefaultAopActors>();
 
             foreach (var descriptor in _serviceDescriptors)
             {
-                if (descriptor.ImplementationType?.GetInterfaces().Length > 0 &&
+                if (
+                    descriptor.ServiceType != descriptor.ImplementationType &&
+                    descriptor.ImplementationType?.GetInterfaces().Length > 0 &&
                     descriptor.ImplementationType?.GetCustomAttribute<JitInjectAttribute>() is JitInjectAttribute attribute &&
                     attribute != null
                 )
                 {
-                    var typeBuilderFactory = TypeBuilderFactory.Instance;
+                    if (!typeBuilderFactory.IsExits(descriptor.ServiceType))
+                    {
+                        var _attribute = descriptor.ServiceType.GetCustomAttribute<AopActorsAttribute>();
+                        var proxyType = typeBuilderFactory.CreateType(_attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType, descriptor.ServiceType, descriptor.ImplementationType);
 
-                    var _attribute = descriptor.ServiceType.GetCustomAttribute<AopActorsAttribute>();
-                    var proxyType = typeBuilderFactory.CreateType(_attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType, descriptor.ServiceType, descriptor.ImplementationType);
-
-                    services.Add(new ServiceDescriptor(descriptor.ServiceType, proxyType, descriptor.Lifetime));
-                    services.Add(new ServiceDescriptor(descriptor.ImplementationType, descriptor.ImplementationType,
-                        descriptor.Lifetime));
+                        services.Add(new ServiceDescriptor(descriptor.ServiceType, proxyType, descriptor.Lifetime));
+                        services.Add(new ServiceDescriptor(descriptor.ImplementationType, descriptor.ImplementationType,
+                            descriptor.Lifetime));
+                    }
                     //_serviceDescriptors.Add(new ServiceDescriptor(typeof(TTarget), typeof(TTarget), serviceLifetime));
                     //_serviceDescriptors.Add(new ServiceDescriptor(typeof(AopActors), typeof(AopActors), serviceLifetime));
                     //_serviceDescriptors.Add(new ServiceDescriptor(sourceType, proxyType, serviceLifetime));
@@ -181,23 +155,30 @@ namespace NCoreCoder.Aop
         {
             var _services = new ServiceCollection();
 
-            _services.TryAddSingleton<IAopActors,DefaultAopActors>();
+            var typeBuilderFactory = new TypeBuilderFactory();
+            _services.TryAddSingleton<DefaultAopActors>();
 
             foreach (var descriptor in services)
             {
-                if (descriptor.ImplementationType?.GetInterfaces().Length > 0 &&
+                if (descriptor.ServiceType != descriptor.ImplementationType &&
+                    descriptor.ImplementationType?.GetInterfaces().Length > 0 &&
                     descriptor.ImplementationType?.GetCustomAttribute<JitInjectAttribute>() is JitInjectAttribute attribute &&
                     attribute != null
                 )
                 {
-                    var typeBuilderFactory = TypeBuilderFactory.Instance;
+                    if (!typeBuilderFactory.IsExits(descriptor.ServiceType))
+                    {
+                        var _attribute = descriptor.ServiceType.GetCustomAttribute<AopActorsAttribute>();
+                        var proxyType = typeBuilderFactory.CreateType(
+                            _attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType,
+                            descriptor.ServiceType, descriptor.ImplementationType);
 
-                    var _attribute = descriptor.ServiceType.GetCustomAttribute<AopActorsAttribute>();
-                    var proxyType = typeBuilderFactory.CreateType(_attribute == null ? typeof(DefaultAopActors) : _attribute.ActorsType, descriptor.ServiceType, descriptor.ImplementationType);
+                        _services.Add(new ServiceDescriptor(descriptor.ServiceType, proxyType, descriptor.Lifetime));
+                        _services.Add(new ServiceDescriptor(descriptor.ImplementationType,
+                            descriptor.ImplementationType,
+                            descriptor.Lifetime));
+                    }
 
-                    _services.Add(new ServiceDescriptor(descriptor.ServiceType, proxyType, descriptor.Lifetime));
-                    _services.Add(new ServiceDescriptor(descriptor.ImplementationType, descriptor.ImplementationType,
-                        descriptor.Lifetime));
                     //_serviceDescriptors.Add(new ServiceDescriptor(typeof(TTarget), typeof(TTarget), serviceLifetime));
                     //_serviceDescriptors.Add(new ServiceDescriptor(typeof(AopActors), typeof(AopActors), serviceLifetime));
                     //_serviceDescriptors.Add(new ServiceDescriptor(sourceType, proxyType, serviceLifetime));

@@ -7,14 +7,14 @@ using System.Reflection.Emit;
 
 namespace NCoreCoder.Aop
 {
-    internal class TypeBuilderFactory
+    public class TypeBuilderFactory
     {
         private readonly AssemblyName _assemblyName;
         private readonly AssemblyBuilder _assemblyBuilder;
         private readonly ModuleBuilder _moduleBuilder;
         private readonly ConcurrentDictionary<Type, Type> _dictionary;
 
-        public static TypeBuilderFactory Instance => new TypeBuilderFactory();
+        public static TypeBuilderFactory Instance = new TypeBuilderFactory();
 
         public TypeBuilderFactory()
         {
@@ -30,12 +30,17 @@ namespace NCoreCoder.Aop
             _dictionary = new ConcurrentDictionary<Type, Type>();
         }
 
+        public bool IsExits(Type sourceType)
+        {
+            return _dictionary.Keys.Any(_key => _key == sourceType);
+        }
+
         public Type CreateType(Type actorsType, Type sourceType,Type targetType)
         {
             if (_dictionary.TryGetValue(sourceType, out Type resultType))
                 return resultType;
 
-            var typeBuilder = _moduleBuilder.DefineType($"NCoreCoder.Aop.Proxy_{targetType.Name}", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.Sealed, typeof(object), new []{ sourceType });
+            var typeBuilder = _moduleBuilder.DefineType($"NCoreCoder.Aop.Proxy_{targetType.Name}", TypeAttributes.Class | TypeAttributes.Sealed, typeof(object), targetType.GetInterfaces());
 
             var types = new Type[]
             {
@@ -69,12 +74,15 @@ namespace NCoreCoder.Aop
 #endif
             _dictionary.TryAdd(sourceType, proxyType);
 
-#if _Nfx
-            _assemblyBuilder.Save("1.dll");
-#endif
-
             return proxyType;
         }
+
+#if _Nfx
+        public void Save()
+        {
+            _assemblyBuilder.Save("1.dll");
+        }
+#endif
     }
 
     internal static class TypeBuilderExtension

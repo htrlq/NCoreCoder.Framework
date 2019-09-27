@@ -6,14 +6,14 @@ namespace NCoreCoder.Aop
 {
     public interface IAopActors
     {
-        object Execute(IAopContext context);
-        Task<TResult> ExecuteAsync<TResult>(IAopContext context);
-        Task InvokeAsync(IAopContext context);
+        object Execute(AopContext context);
+        Task<TResult> ExecuteAsync<TResult>(AopContext context);
+        Task InvokeAsync(AopContext context);
     }
 
     public class DefaultAopActors: IAopActors
     {
-        public object Execute(IAopContext context)
+        public object Execute(AopContext context)
         {
             if (context.MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
                 return context.Execute();
@@ -21,7 +21,7 @@ namespace NCoreCoder.Aop
             return context.MethodInfo.GetReflector().Invoke(context.Instance, context.Args);
         }
 
-        public async Task<TResult> ExecuteAsync<TResult>(IAopContext context)
+        public async Task<TResult> ExecuteAsync<TResult>(AopContext context)
         {
             if (context.MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
                 return await context.ExecuteAsync<TResult>();
@@ -30,7 +30,7 @@ namespace NCoreCoder.Aop
             return await Task.FromResult<TResult>((TResult)result);
         }
 
-        public async Task InvokeAsync(IAopContext context)
+        public async Task InvokeAsync(AopContext context)
         {
             if (context.MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
                 await context.InvokeAsync();

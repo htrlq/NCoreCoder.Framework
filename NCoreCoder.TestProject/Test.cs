@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
+using NCoreCoder.Aop;
 
 namespace NCoreCoder.TestProject
 {
+    [JitInject]
     public class Test : ITest
     {
         public void TestVoid()

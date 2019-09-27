@@ -40,6 +40,7 @@ namespace NCoreCoder.TestProject
                 .BuilderService(services =>
                 {
                     services.AddTransient<ITest, Test>();
+                    //services.AddJitAop<IJitService, JitService>(ServiceLifetime.Transient);
                     services.AddTransient<IJitService, JitService>();
                 });
 
@@ -64,6 +65,7 @@ namespace NCoreCoder.TestProject
                 .BuilderService(services =>
                 {
                     services.AddScoped<ITest, Test>();
+                    //services.AddJitAop<IJitService, JitService>(ServiceLifetime.Scoped);
                     services.AddScoped<IJitService, JitService>();
                 });
 
@@ -81,6 +83,45 @@ namespace NCoreCoder.TestProject
                 var asyncInt = await test.TestIntAsync();
                 Assert.Equal<int>(900, asyncInt);
             }
+        }
+    }
+
+    public interface IJitService
+    {
+        void TestVoid();
+        int TestInt();
+        Task TestAsync();
+        Task<int> TestIntAsync();
+    }
+
+    [JitInject]
+    internal class JitService : IJitService
+    {
+        public ITest Test { get; }
+
+        public JitService(ITest test)
+        {
+            Test = test;
+        }
+
+        public Task TestAsync()
+        {
+            return Test.TestAsync();
+        }
+
+        public int TestInt()
+        {
+            return Test.TestInt();
+        }
+
+        public Task<int> TestIntAsync()
+        {
+            return Test.TestIntAsync();
+        }
+
+        public void TestVoid()
+        {
+            Test.TestVoid();
         }
     }
 }

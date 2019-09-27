@@ -59,7 +59,7 @@ namespace NCoreCoder.Aop
             var methodinfos = sourceType
                 .GetTypeInfo()
                 .GetMethods()
-                .Where(_method=>!ignoreMethods.Contains(_method.Name))
+                .Where(_method=>!ignoreMethods.Contains(_method.Name) && _method.IsVirtual)
                 .ToArray();
 
             for (var i = 0; i < methodinfos.Length; i++)
@@ -97,7 +97,6 @@ namespace NCoreCoder.Aop
 
                 var method = ilGenerator.DeclareLocal(typeof(MethodInfo));
                 var parameters = ilGenerator.DeclareLocal(typeof(object[]));
-                var context = ilGenerator.DeclareLocal(typeof(IAopContext));
 
                 var _returnType = methodInfo.ReturnType;
                 var isAsync = _returnType == typeof(Task) || _returnType.BaseType == typeof(Task);
@@ -145,8 +144,6 @@ namespace NCoreCoder.Aop
                 typeof(AopContext).GetReflector().GetMemberInfo().GetConstructors().FirstOrDefault()
                 );
 
-                ilGenerator.Emit(OpCodes.Stloc, context);
-
                 if (isAsync)
                 {
                     //_context.Execute(method, instance, params);
@@ -159,7 +156,7 @@ namespace NCoreCoder.Aop
                         ilGenerator.Emit(OpCodes.Callvirt,
                             actorsType.GetMethod($"ExecuteAsync", new[]
                             {
-                            typeof(IAopContext)
+                            typeof(AopContext)
                             }).MakeGenericMethod(genericTypeDefinition)
                         );
                     }
@@ -168,19 +165,18 @@ namespace NCoreCoder.Aop
                         ilGenerator.Emit(OpCodes.Callvirt,
                             actorsType.GetMethod($"InvokeAsync", new[]
                             {
-                            typeof(IAopContext),
+                            typeof(AopContext),
                             })
                         );
                     }
                 }
                 else
                 {
-                    ilGenerator.Emit(OpCodes.Ldloc, context);
                     //_context.Execute(method, instance, params);
                     // ReSharper disable once AssignNullToNotNullAttribute
                     ilGenerator.Emit(OpCodes.Callvirt, actorsType.GetMethod($"Execute", new[]
                     {
-                    typeof(IAopContext),
+                    typeof(AopContext),
                     }));
                 }
 

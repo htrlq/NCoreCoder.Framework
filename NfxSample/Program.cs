@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,54 +15,101 @@ namespace NfxSample
         {
             var service = new ServiceCollection();
 
-            service.AddJitAop<IMyClass, MyClass>(ServiceLifetime.Singleton);
+            service.AddSingleton<IJitService, JitService>();
+            service.AddSingleton<IMyClass, MyClass>();
 
-            var serviceProvider = service.BuildServiceProvider();
-            var myclass = serviceProvider.GetRequiredService<IMyClass>();
+            var serviceProvider = service.BuilderJit();
 
-            //myclass.Invoke();
-            myclass.Result();
+            TypeBuilderFactory.Instance.Save();
+
+            var myclass = serviceProvider.GetRequiredService<IJitService>();
+
+            Task.Factory.StartNew(async () =>
+            {
+                myclass.TestVoid();
+                var result1 = myclass.TestInt();
+
+                await myclass.TestAsync();
+                var result2 = await myclass.TestIntAsync();
+            });
+
+            Console.ReadLine();
         }
     }
 
     public interface IMyClass
     {
-        void Invoke();
-        int Result();
+        void TestVoid();
+        int TestInt();
+        Task TestAsync();
+        Task<int> TestIntAsync();
     }
 
+    [JitInject]
     internal class MyClass : IMyClass
     {
-        public void Invoke()
+        public void TestVoid()
         {
-            Console.WriteLine("Invoke");
+            Console.WriteLine("TestVoid");
         }
 
-        public int Result()
+        public int TestInt()
         {
-            Console.WriteLine("Result");
+            Console.WriteLine("TestInt");
 
             return 100;
         }
+
+        public Task TestAsync()
+        {
+            Console.WriteLine("TestAsync");
+
+            return Task.CompletedTask;
+        }
+
+        public Task<int> TestIntAsync()
+        {
+            Console.WriteLine("TestIntAsync");
+
+            return Task.FromResult(100);
+        }
+    }
+    public interface IJitService
+    {
+        void TestVoid();
+        int TestInt();
+        Task TestAsync();
+        Task<int> TestIntAsync();
     }
 
-    internal class MyClassA : IMyClass
+    [JitInject]
+    internal class JitService : IJitService
     {
-        private IMyClass _myClass;
+        public IMyClass Test { get; }
 
-        public MyClassA(IMyClass myClass)
+        public JitService(IMyClass test)
         {
-            _myClass = myClass;
+            Test = test;
         }
 
-        public void Invoke()
+        public Task TestAsync()
         {
-            _myClass.Invoke();
+            return Test.TestAsync();
         }
 
-        public int Result()
+        public int TestInt()
         {
-            return _myClass.Result();
+            return Test.TestInt();
+        }
+
+        public Task<int> TestIntAsync()
+        {
+            return Test.TestIntAsync();
+        }
+
+        public void TestVoid()
+        {
+            Test.TestVoid();
         }
     }
 }
