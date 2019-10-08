@@ -159,4 +159,4 @@ add Method
         {
             builder.Add<ITestClass, TestClass>(ServiceLifetime.Singleton);
         }
-```csharp
+```
