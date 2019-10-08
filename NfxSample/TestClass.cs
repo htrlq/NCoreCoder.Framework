@@ -7,6 +7,7 @@ namespace NfxSample
     [JitInject]
     public class TestClass: ITestClass
     {
+        [JitAop]
         public string Hello()
         {
             Console.WriteLine("Hello");

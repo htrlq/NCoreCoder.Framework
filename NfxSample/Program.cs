@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +12,14 @@ namespace NfxSample
         static void Main()
         {
             IServiceCollection services = new ServiceCollection();
-            services.AddSingleton<ITestClass, TestClass>();
+
+            services.AddAutoInject(Assembly.GetCallingAssembly());
+            //services.AddSingleton<ITestClass, TestClass>();
 
             var serviceProvider = services.BuilderJit();
-            var instance = serviceProvider.GetRequiredService<ITestClass>();
+            var instance = serviceProvider.GetRequiredService<ITest>();
 
-            Test(instance);
+            //Test(instance);
 
             Console.ReadLine();
         }
@@ -36,6 +37,20 @@ namespace NfxSample
 
             if (!hello.Equals("Hello"))
                 throw new Exception($"Assert not Equals");
+        }
+    }
+
+    public interface ITest
+    {
+        void Hello();
+    }
+
+    [Scoped(typeof(ITest))]
+    internal class Test:ITest
+    {
+        public void Hello()
+        {
+            Console.WriteLine("Hello");
         }
     }
 }

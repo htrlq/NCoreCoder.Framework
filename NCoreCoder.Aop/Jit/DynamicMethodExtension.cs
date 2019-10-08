@@ -56,8 +56,8 @@ namespace NCoreCoder.Aop
 
             #region Delegate
             ilGenerator.Emit(OpCodes.Ldtoken, isAsync ? returnType : typeof(object));
-            ilGenerator.Emit(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }));
-            ilGenerator.Emit(OpCodes.Call, typeof(ExpressionExtension).GetMethod("BuilderDelegate", new[] { typeof(Type) }));
+            ilGenerator.Emit(OpCodes.Call, MethodInfoExtension.GetTypeFromHandle);
+            ilGenerator.Emit(OpCodes.Call, MethodInfoExtension.BuilderDelegate);
             ilGenerator.Emit(OpCodes.Stloc, _delegate);
             #endregion
 
@@ -94,21 +94,17 @@ namespace NCoreCoder.Aop
                     var typeInfo = returnType.GetTypeInfo();
                     var genericTypeDefinition = typeInfo.GetGenericArguments().Single();
 
-                    ilGenerator.Emit(OpCodes.Callvirt, typeof(DefaultAopActors).GetMethod("ExecuteAsync").MakeGenericMethod(genericTypeDefinition));
+                    ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.ExecuteAsync.MakeGenericMethod(genericTypeDefinition));
                 }
                 else
                 {
-                    ilGenerator.Emit(OpCodes.Callvirt, typeof(DefaultAopActors).GetMethod("InvokeAsync"));
+                    ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.InvokeAsync);
                 }
             }
             else
             {
                 //_actor.Execute(_invoke,context);
-                ilGenerator.Emit(OpCodes.Callvirt, typeof(DefaultAopActors).GetMethod("Execute", new[]
-                {
-                    funcType,
-                    typeof(AopContext)
-                }));
+                ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.Execute);
             }
 
             if (returnType == typeof(void))

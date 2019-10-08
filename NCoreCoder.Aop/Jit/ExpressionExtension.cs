@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace NCoreCoder.Aop
@@ -19,8 +18,7 @@ namespace NCoreCoder.Aop
             var resultLabel = Expression.Label(typeof(object));
             var resultVariable = Expression.Variable(typeof(object));
 
-            var method = Expression.Call(methodInfo,
-                typeof(MethodBase).GetMethod("Invoke", new[] { typeof(object), typeof(object[]) }), instance, args);
+            var method = Expression.Call(methodInfo, MethodInfoExtension.Invoke, instance, args);
             var setResult = Expression.Assign(resultVariable, method);
             var ret = Expression.Return(resultLabel, resultVariable);
             var defaultLabel = Expression.Label(resultLabel, Expression.Constant(default(object), typeof(object)));
@@ -44,8 +42,7 @@ namespace NCoreCoder.Aop
             var resultLabel = Expression.Label(typeof(object));
             var resultVariable = Expression.Variable(typeof(object));
 
-            var method = Expression.Call(methodInfo,
-                typeof(MethodBase).GetMethod("Invoke", new[] { typeof(object), typeof(object[]) }), instance, args);
+            var method = Expression.Call(methodInfo, MethodInfoExtension.Invoke, instance, args);
             var setResult = Expression.Assign(resultVariable, method);
             var ret = Expression.Return(resultLabel, resultVariable);
             var defaultLabel = Expression.Label(resultLabel, Expression.Constant(default(object), typeof(object)));
