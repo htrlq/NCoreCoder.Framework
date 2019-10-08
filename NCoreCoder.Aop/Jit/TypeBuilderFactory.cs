@@ -40,7 +40,14 @@ namespace NCoreCoder.Aop
             if (_dictionary.TryGetValue(sourceType, out Type resultType))
                 return resultType;
 
-            var typeBuilder = _moduleBuilder.DefineType($"NCoreCoder.Aop.Proxy_{targetType.Name}", TypeAttributes.Class | TypeAttributes.Sealed, typeof(object), targetType.GetInterfaces());
+            var typeName = $"NCoreCoder.Aop.Proxy_{targetType.Name}";
+
+            if (_moduleBuilder.GetType(typeName) != null)
+            {
+                typeName = $"NCoreCoder.Aop.Proxy_{targetType.Name}_{DateTimeOffset.Now.Ticks}";
+            }
+
+            var typeBuilder = _moduleBuilder.DefineType(typeName, TypeAttributes.Class | TypeAttributes.Sealed, typeof(object), targetType.GetInterfaces());
 
             var types = new Type[]
             {
