@@ -20,7 +20,7 @@
 * Attribute Edit, method contains After、AfterAsync, Add Paramater Execption
 * IAopActors and DefaultActors Edit, All Add Paramater Func Delegate
 * [Sample](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
-#Sample
+# Code Sample
 ```csharp
     //new interface
     public interface ITestClass
