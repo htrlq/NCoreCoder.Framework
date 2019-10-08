@@ -62,20 +62,12 @@ namespace NCoreCoder.Aop
 
             return builder.BuilderServiceProvider();
         }
-
-        public static IServiceCollection TryAddNoRepeat(this IServiceCollection service,
-            ServiceDescriptor serviceDescriptor)
-        {
-            if (service.Any(_servceDescript => _servceDescript.ServiceType != serviceDescriptor.ServiceType))
-                service.Add(serviceDescriptor);
-
-            return service;
-        }
     }
 
     public class JitAopBuilder
     {
         private List<ServiceDescriptor> _serviceDescriptors = new List<ServiceDescriptor>();
+        private TypeBuilderFactory typeBuilderFactory = new TypeBuilderFactory();
 
         public JitAopBuilder(IServiceCollection services)
         {
@@ -86,8 +78,6 @@ namespace NCoreCoder.Aop
         {
             if (typeof(TTarget).GetInterfaces().Length == 0)
                 throw new Exception($"Not inherit interface");
-
-            var typeBuilderFactory = TypeBuilderFactory.Instance;
 
             var sourceType = typeof(TSource);
             var targetType = typeof(TTarget);
@@ -102,8 +92,6 @@ namespace NCoreCoder.Aop
         public IServiceProvider BuilderServiceProvider()
         {
             var services = new ServiceCollection();
-
-            var typeBuilderFactory = new TypeBuilderFactory();
             services.TryAddSingleton<DefaultAopActors>();
 
             foreach (var descriptor in _serviceDescriptors)
@@ -131,6 +119,10 @@ namespace NCoreCoder.Aop
                 else
                     services.Add(descriptor);
             }
+
+#if _Nfx
+            typeBuilderFactory.Save();
+#endif
 
             return services.BuildServiceProvider();
         }

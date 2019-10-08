@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using AspectCore.Extensions.Reflection;
 
@@ -6,36 +7,35 @@ namespace NCoreCoder.Aop
 {
     public interface IAopActors
     {
-        object Execute(AopContext context);
-        Task<TResult> ExecuteAsync<TResult>(AopContext context);
-        Task InvokeAsync(AopContext context);
+        object Execute(Func<AopContext, object> invoke, AopContext context);
+        Task<TResult> ExecuteAsync<TResult>(Func<AopContext, Task<TResult>> invoke, AopContext context);
+        Task InvokeAsync(Func<AopContext, Task> invoke, AopContext context);
     }
 
-    public class DefaultAopActors: IAopActors
+    public class DefaultAopActors : IAopActors
     {
-        public object Execute(AopContext context)
+        public object Execute(Func<AopContext, object> invoke, AopContext context)
         {
-            if (context.MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
+            if (context.MethodInfo.GetCustomAttribute<JitAopAttribute>() != null)
                 return context.Execute();
 
-            return context.MethodInfo.GetReflector().Invoke(context.Instance, context.Args);
+            return invoke(context);
         }
 
-        public async Task<TResult> ExecuteAsync<TResult>(AopContext context)
+        public async Task<TResult> ExecuteAsync<TResult>(Func<AopContext, Task<TResult>> invoke, AopContext context)
         {
-            if (context.MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
+            if (context.MethodInfo.GetCustomAttribute<JitAopAttribute>() != null)
                 return await context.ExecuteAsync<TResult>();
 
-            var result = await (Task<TResult>) context.MethodInfo.GetReflector().Invoke(context.Instance, context.Args);
-            return await Task.FromResult<TResult>((TResult)result);
+            return await invoke(context);
         }
 
-        public async Task InvokeAsync(AopContext context)
+        public async Task InvokeAsync(Func<AopContext, Task> invoke, AopContext context)
         {
-            if (context.MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>() != null)
+            if (context.MethodInfo.GetCustomAttribute<JitAopAttribute>() != null)
                 await context.InvokeAsync();
             else
-                await (Task)context.MethodInfo.GetReflector().Invoke(context.Instance, context.Args);
+                await invoke(context);
         }
     }
 }

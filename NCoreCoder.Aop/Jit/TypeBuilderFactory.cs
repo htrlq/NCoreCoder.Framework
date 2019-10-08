@@ -14,7 +14,7 @@ namespace NCoreCoder.Aop
         private readonly ModuleBuilder _moduleBuilder;
         private readonly ConcurrentDictionary<Type, Type> _dictionary;
 
-        public static TypeBuilderFactory Instance = new TypeBuilderFactory();
+        //public static TypeBuilderFactory Instance = new TypeBuilderFactory();
 
         public TypeBuilderFactory()
         {
@@ -49,9 +49,9 @@ namespace NCoreCoder.Aop
                 targetType,
             };
 
-            var paramArray = typeBuilder.AddRangeParam(FieldAttributes.Private,
-                types
-            );
+            var actors = typeBuilder.DefineField("_actors", actorsType, FieldAttributes.Private);
+            var serviceProvider = typeBuilder.DefineField("_serviceProvider", typeof(IServiceProvider), FieldAttributes.Private);
+            var instance = typeBuilder.DefineField("_instance", targetType, FieldAttributes.Private);
 
             // ReSharper disable once UseMethodAny.2
             //var context = typeBuilder.DefineField("_context", typeof(AopActors), FieldAttributes.Private);
@@ -59,11 +59,10 @@ namespace NCoreCoder.Aop
             //var instance = typeBuilder.DefineField("_instance", targetType, FieldAttributes.Private);
             //var serviceProvider = typeBuilder.DefineField("_serviceProvider", typeof(IServiceProvider), FieldAttributes.Private);
 
-            targetType.InjectConstructor(targetType, typeBuilder, paramArray);
+            targetType.InjectConstructor(targetType, typeBuilder, actors, serviceProvider, instance);
 
             targetType.InjectMethod(typeBuilder,
-                actorsType,
-                paramArray
+                actors,serviceProvider,instance
             );
 
 #if _Nfx

@@ -74,6 +74,8 @@
     <Compile Include="..\NCoreCoder.Aop\Jit\JitAopAttribute.cs" />
     <Compile Include="..\NCoreCoder.Aop\Jit\TypeBuilderFactory.cs" />
 	<Compile Include="..\NCoreCoder.Aop\Jit\AopActorsAttribute.cs" />
+	<Compile Include="..\NCoreCoder.Aop\Jit\DynamicMethodExtension.cs" />
+	<Compile Include="..\NCoreCoder.Aop\Jit\ExpressionExtension.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\NCoreCoder.Aop\ServiceCollectionExtension.cs" />
   </ItemGroup>

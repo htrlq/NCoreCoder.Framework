@@ -14,7 +14,7 @@ namespace NCoreCoder.TestProject
             Console.WriteLine($"Before Name:{method.Name}");
         }
 
-        public override void After(MethodReflector method, object instance, params object[] param)
+        public override void After(MethodReflector method, Exception exception, object instance, params object[] param)
         {
             Console.WriteLine($"After Name:{method.Name}");
         }
@@ -25,7 +25,7 @@ namespace NCoreCoder.TestProject
             return Task.CompletedTask;
         }
 
-        public override Task AfterAsync(MethodReflector method, object instance, params object[] param)
+        public override Task AfterAsync(MethodReflector method, Exception exception, object instance, params object[] param)
         {
             Console.WriteLine($"AfterAsync Name:{method.Name}");
             return Task.CompletedTask;

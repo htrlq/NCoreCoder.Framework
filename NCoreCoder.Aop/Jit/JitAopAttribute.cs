@@ -13,7 +13,7 @@ namespace NCoreCoder.Aop
             Console.WriteLine($"Before Name:{method.Name}");
         }
 
-        public virtual void After(MethodReflector method, object instance, params object[] param)
+        public virtual void After(MethodReflector method, Exception exception, object instance, params object[] param)
         {
             Console.WriteLine($"After Name:{method.Name}");
         }
@@ -24,7 +24,7 @@ namespace NCoreCoder.Aop
             return Task.CompletedTask;
         }
 
-        public virtual Task AfterAsync(MethodReflector method, object instance, params object[] param)
+        public virtual Task AfterAsync(MethodReflector method, Exception exception, object instance, params object[] param)
         {
             Console.WriteLine($"AfterAsync Name:{method.Name}");
             return Task.CompletedTask;

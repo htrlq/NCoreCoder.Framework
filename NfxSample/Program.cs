@@ -1,115 +1,41 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NCoreCoder.Aop;
+using Newtonsoft.Json;
 
 namespace NfxSample
 {
     class Program
     {
-        static void Main(string[] args)
+        static void Main()
         {
-            var service = new ServiceCollection();
+            IServiceCollection services = new ServiceCollection();
+            services.AddSingleton<ITestClass, TestClass>();
 
-            service.AddSingleton<IJitService, JitService>();
-            service.AddSingleton<IMyClass, MyClass>();
+            var serviceProvider = services.BuilderJit();
+            var instance = serviceProvider.GetRequiredService<ITestClass>();
 
-            var serviceProvider = service.BuilderJit();
-
-            TypeBuilderFactory.Instance.Save();
-
-            var myclass = serviceProvider.GetRequiredService<IJitService>();
-
-            Task.Factory.StartNew(async () =>
-            {
-                myclass.TestVoid();
-                var result1 = myclass.TestInt();
-
-                await myclass.TestAsync();
-                var result2 = await myclass.TestIntAsync();
-            });
+            Test(instance);
 
             Console.ReadLine();
         }
-    }
 
-    public interface IMyClass
-    {
-        void TestVoid();
-        int TestInt();
-        Task TestAsync();
-        Task<int> TestIntAsync();
-    }
-
-    [JitInject]
-    internal class MyClass : IMyClass
-    {
-        public void TestVoid()
+        static async void Test(ITestClass testClass)
         {
-            Console.WriteLine("TestVoid");
-        }
+            var result = await testClass.ResultIntAsync();
 
-        public int TestInt()
-        {
-            Console.WriteLine("TestInt");
+            if (result != 100)
+                throw new Exception($"Assert not Equals");
 
-            return 100;
-        }
+            await testClass.ReturnAsync();
 
-        public Task TestAsync()
-        {
-            Console.WriteLine("TestAsync");
+            var hello = testClass.Hello();
 
-            return Task.CompletedTask;
-        }
-
-        public Task<int> TestIntAsync()
-        {
-            Console.WriteLine("TestIntAsync");
-
-            return Task.FromResult(100);
-        }
-    }
-    public interface IJitService
-    {
-        void TestVoid();
-        int TestInt();
-        Task TestAsync();
-        Task<int> TestIntAsync();
-    }
-
-    [JitInject]
-    internal class JitService : IJitService
-    {
-        public IMyClass Test { get; }
-
-        public JitService(IMyClass test)
-        {
-            Test = test;
-        }
-
-        public Task TestAsync()
-        {
-            return Test.TestAsync();
-        }
-
-        public int TestInt()
-        {
-            return Test.TestInt();
-        }
-
-        public Task<int> TestIntAsync()
-        {
-            return Test.TestIntAsync();
-        }
-
-        public void TestVoid()
-        {
-            Test.TestVoid();
+            if (!hello.Equals("Hello"))
+                throw new Exception($"Assert not Equals");
         }
     }
 }

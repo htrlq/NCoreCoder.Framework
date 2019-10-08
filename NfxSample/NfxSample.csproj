@@ -40,6 +40,9 @@
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.3.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -52,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestClass.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -59,7 +63,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NCoreCoder.Aop.Nfx\NCoreCoder.Aop.Nfx.csproj">
-      <Project>{a5f858b8-4ca5-45c0-a38c-9d8be2e3b2ed}</Project>
+      <Project>{A5F858B8-4CA5-45C0-A38C-9D8BE2E3B2ED}</Project>
       <Name>NCoreCoder.Aop.Nfx</Name>
     </ProjectReference>
   </ItemGroup>

@@ -22,14 +22,14 @@ namespace NCoreCoder.Aop
 
         public static void InjectConstructor(this Type sourceType,
             Type targetType, TypeBuilder typeBuilder,
-            FieldBuilder[] paramArray
+            params FieldBuilder[] paramArray
          )
         {
             if (sourceType.GetConstructors().Length > 1)
                 throw new Exception($"Constructor Count > 1");
 
             var ctorMethod = typeof(object).GetConstructor(Type.EmptyTypes);
-            var argsList = paramArray.Select(_field=>_field.FieldType).ToList();
+            var argsList = paramArray.Select(_field => _field.FieldType).ToList();
 
             var method = typeBuilder.DefineConstructor(MethodAttributes.Public, typeof(object).GetReflector().GetMemberInfo().GetConstructors().Single().CallingConvention, argsList.ToArray());
             // ReSharper disable once PossibleNullReferenceException
@@ -46,20 +46,20 @@ namespace NCoreCoder.Aop
             for (var index = 0; index < argsList.Count; index++)
             {
                 ilGenerator.Emit(OpCodes.Ldarg_0);
-                ilGenerator.EmitLoadArg(index+1);
+                ilGenerator.EmitLoadArg(index + 1);
                 ilGenerator.Emit(OpCodes.Stfld, paramArray[index]);
             }
 
             ilGenerator.Emit(OpCodes.Ret);
         }
 
-        public static void InjectMethod(this Type sourceType, TypeBuilder typeBuilder, Type actorsType,
-            FieldBuilder[] paramArray)
+        public static void InjectMethod(this Type targetType, TypeBuilder typeBuilder,
+            FieldBuilder actors,FieldBuilder serviceProvider, FieldBuilder instance)
         {
-            var methodinfos = sourceType
+            var methodinfos = targetType
                 .GetTypeInfo()
                 .GetMethods()
-                .Where(_method=>!ignoreMethods.Contains(_method.Name) && _method.IsVirtual)
+                .Where(_method => !ignoreMethods.Contains(_method.Name) && _method.IsVirtual)
                 .ToArray();
 
             for (var i = 0; i < methodinfos.Length; i++)
@@ -92,104 +92,106 @@ namespace NCoreCoder.Aop
                 var methodBuilder = typeBuilder.DefineMethod(methodInfo.Name, attributes, CallingConventions.Standard, methodInfo.ReturnType, paramTypes);
 
                 var ilGenerator = methodBuilder.GetILGenerator();
+                                /*
+                                ilGenerator.Emit(OpCodes.Nop);
 
-                ilGenerator.Emit(OpCodes.Nop);
+                                var method = ilGenerator.DeclareLocal(typeof(MethodInfo));
+                                var parameters = ilGenerator.DeclareLocal(typeof(object[]));
 
-                var method = ilGenerator.DeclareLocal(typeof(MethodInfo));
-                var parameters = ilGenerator.DeclareLocal(typeof(object[]));
+                                var _returnType = methodInfo.ReturnType;
+                                var isAsync = _returnType == typeof(Task) || _returnType.BaseType == typeof(Task);
 
-                var _returnType = methodInfo.ReturnType;
-                var isAsync = _returnType == typeof(Task) || _returnType.BaseType == typeof(Task);
+                                ilGenerator.AddLdcI4(paramTypes.Length);
+                                ilGenerator.Emit(OpCodes.Newarr, typeof(object));
 
-                ilGenerator.AddLdcI4(paramTypes.Length);
-                ilGenerator.Emit(OpCodes.Newarr, typeof(object));
+                                for (var j = 0; j < paramTypes.Length; j++)
+                                {
+                                    ilGenerator.Emit(OpCodes.Dup);
+                                    ilGenerator.AddLdcI4(j);
+                                    ilGenerator.EmitLoadArg(j + 1);
 
-                for (var j = 0; j < paramTypes.Length; j++)
-                {
-                    ilGenerator.Emit(OpCodes.Dup);
-                    ilGenerator.AddLdcI4(j);
-                    ilGenerator.EmitLoadArg(j + 1);
+                                    var parameterType = paramTypes[j];
+                                    if (parameterType.GetTypeInfo().IsValueType || parameterType.IsGenericParameter)
+                                    {
+                                        ilGenerator.Emit(OpCodes.Box, parameterType);
+                                    }
+                                    ilGenerator.Emit(OpCodes.Stelem_Ref);
+                                }
 
-                    var parameterType = paramTypes[j];
-                    if (parameterType.GetTypeInfo().IsValueType || parameterType.IsGenericParameter)
-                    {
-                        ilGenerator.Emit(OpCodes.Box, parameterType);
-                    }
-                    ilGenerator.Emit(OpCodes.Stelem_Ref);
-                }
+                                ilGenerator.Emit(OpCodes.Stloc, parameters);
 
-                ilGenerator.Emit(OpCodes.Stloc, parameters);
+                                //methodInfo
+                                ilGenerator.EmitMethod(methodInfo);
+                                ilGenerator.Emit(OpCodes.Stloc_0, method);
 
-                //methodInfo
-                ilGenerator.EmitMethod(methodInfo);
-                ilGenerator.Emit(OpCodes.Stloc_0, method);
+                                //_context
+                                ilGenerator.Emit(OpCodes.Ldarg_0);
+                                ilGenerator.Emit(OpCodes.Ldflda, paramArray[0]);
 
-                //_context
-                ilGenerator.Emit(OpCodes.Ldarg_0);
-                ilGenerator.Emit(OpCodes.Ldflda, paramArray[0]);
+                                for (int index = 1; index < paramArray.Length; index++)
+                                {
+                                    ilGenerator.Emit(OpCodes.Ldarg_0);
+                                    ilGenerator.Emit(OpCodes.Ldfld, paramArray[index]);
+                                }
 
-                for (int index = 1; index < paramArray.Length; index++)
-                {
-                    ilGenerator.Emit(OpCodes.Ldarg_0);
-                    ilGenerator.Emit(OpCodes.Ldfld, paramArray[index]);
-                }
+                                //methodInfo
+                                ilGenerator.Emit(OpCodes.Ldloc_0, method);
+                                //args
+                                ilGenerator.Emit(OpCodes.Ldloc, parameters);
 
-                //methodInfo
-                ilGenerator.Emit(OpCodes.Ldloc_0, method);
-                //args
-                ilGenerator.Emit(OpCodes.Ldloc, parameters);
+                                //new AopContext(serviceProvider,methods,instance,args);
+                                ilGenerator.Emit(OpCodes.Newobj,
+                                typeof(AopContext).GetReflector().GetMemberInfo().GetConstructors().FirstOrDefault()
+                                );
 
-                //new AopContext(serviceProvider,methods,instance,args);
-                ilGenerator.Emit(OpCodes.Newobj,
-                typeof(AopContext).GetReflector().GetMemberInfo().GetConstructors().FirstOrDefault()
-                );
+                                if (isAsync)
+                                {
+                                    //_context.Execute(method, instance, params);
 
-                if (isAsync)
-                {
-                    //_context.Execute(method, instance, params);
+                                    if (_returnType.IsGenericType)
+                                    {
+                                        var typeInfo = _returnType.GetTypeInfo();
+                                        var genericTypeDefinition = typeInfo.GetGenericArguments().Single();
 
-                    if (_returnType.IsGenericType)
-                    {
-                        var typeInfo = _returnType.GetTypeInfo();
-                        var genericTypeDefinition = typeInfo.GetGenericArguments().Single();
+                                        ilGenerator.Emit(OpCodes.Callvirt,
+                                            actorsType.GetMethod($"ExecuteAsync", new[]
+                                            {
+                                            typeof(AopContext)
+                                            }).MakeGenericMethod(genericTypeDefinition)
+                                        );
+                                    }
+                                    else
+                                    {
+                                        ilGenerator.Emit(OpCodes.Callvirt,
+                                            actorsType.GetMethod($"InvokeAsync", new[]
+                                            {
+                                            typeof(AopContext),
+                                            })
+                                        );
+                                    }
+                                }
+                                else
+                                {
+                                    //_context.Execute(method, instance, params);
+                                    // ReSharper disable once AssignNullToNotNullAttribute
+                                    ilGenerator.Emit(OpCodes.Callvirt, actorsType.GetMethod($"Execute", new[]
+                                    {
+                                    typeof(AopContext),
+                                    }));
+                                }
 
-                        ilGenerator.Emit(OpCodes.Callvirt,
-                            actorsType.GetMethod($"ExecuteAsync", new[]
-                            {
-                            typeof(AopContext)
-                            }).MakeGenericMethod(genericTypeDefinition)
-                        );
-                    }
-                    else
-                    {
-                        ilGenerator.Emit(OpCodes.Callvirt,
-                            actorsType.GetMethod($"InvokeAsync", new[]
-                            {
-                            typeof(AopContext),
-                            })
-                        );
-                    }
-                }
-                else
-                {
-                    //_context.Execute(method, instance, params);
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    ilGenerator.Emit(OpCodes.Callvirt, actorsType.GetMethod($"Execute", new[]
-                    {
-                    typeof(AopContext),
-                    }));
-                }
+                                if (_returnType == typeof(void))
+                                    ilGenerator.Emit(OpCodes.Pop);
 
-                if (_returnType == typeof(void))
-                    ilGenerator.Emit(OpCodes.Pop);
+                                if (_returnType != typeof(void) && _returnType.IsValueType)
+                                    ilGenerator.Emit(OpCodes.Unbox_Any, methodInfo.ReturnType);
 
-                if (_returnType != typeof(void) && _returnType.IsValueType)
-                    ilGenerator.Emit(OpCodes.Unbox_Any, methodInfo.ReturnType);
+                                if (!isAsync && methodInfo.ReturnType.IsGenericType)
+                                    ilGenerator.Emit(OpCodes.Castclass, methodInfo.ReturnType);
 
-                if (!isAsync && methodInfo.ReturnType.IsGenericType)
-                    ilGenerator.Emit(OpCodes.Castclass, methodInfo.ReturnType);
-
-                ilGenerator.Emit(OpCodes.Ret);
+                                ilGenerator.Emit(OpCodes.Ret);
+                                */
+                ilGenerator.EmitProxyMethod(methodInfo, actors, serviceProvider, instance);
             }
         }
     }
