@@ -84,7 +84,7 @@ support async method and sync method
         }
     }
 ```
-Edit TestClass
+### Edit TestClass
 ```csharp
     [JitInject]
     public class TestClass: ITestClass
@@ -120,7 +120,7 @@ Edit TestClass
     }
 ```
 
-Use TestAopActors
+## Use TestAopActors
 ```csharp
     [AopActors(typeof(TestActors))]
     public interface ITestClass
@@ -130,3 +130,33 @@ Use TestAopActors
         Task ReturnAsync();
     }
 ```
+# Run
+## Under Asp.net Core 3.0
+edit Startup.cs
+```csharp
+   public IServiceProvider ConfigureServices(IServiceCollection services)
+   {
+      //...
+      services.AddSingleton<ITestClass, TestClass>();
+      return services.BuilderJit();
+   }
+```
+# Asp.net Core 3.0
+edit Program.cs
+```csharp
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseServiceProviderFactory(new JitServiceProviderFactory()) //new
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
+```
+edit Startup.cs
+add Method
+```csharp
+        public void ConfigureContainer(JitAopBuilder builder)
+        {
+            builder.Add<ITestClass, TestClass>(ServiceLifetime.Singleton);
+        }
+```csharp
