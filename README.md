@@ -16,3 +16,147 @@
 * [Sample](https://www.cnblogs.com/NCoreCoder/p/11586797.html)
 * 2019/9/26
 * Add Custom Aop Actors
+* 2019/10/8
+* Attribute Edit, method contains After、AfterAsync, Add Paramater Execption
+* IAopActors and DefaultActors Edit, All Add Paramater Func Delegate
+* [Sample](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
+# Code Sample
+```csharp
+    //new interface
+    public interface ITestClass
+    {
+        string Hello();
+        Task<int> ResultIntAsync();
+        Task ReturnAsync();
+    }
+    
+    //new class inherit ITestClass
+    [JitInject]
+    public class TestClass: ITestClass
+    {
+        [JitAop]
+        public string Hello()
+        {
+            Console.WriteLine("Hello");
+            return "Hello";
+        }
+
+        public Task<int> ResultIntAsync()
+        {
+            Console.WriteLine("ResultIntAsync");
+            return Task.FromResult(100);
+        }
+
+        public Task ReturnAsync()
+        {
+            Console.WriteLine("ReturnAsync");
+            return Task.CompletedTask;
+        }
+    }
+```
+## class TestClass add aop
+method "Hello" add default aop, but custom, add attribute inherit JitAopAttribute
+support async method and sync method
+```csharp
+    [AttributeUsage(AttributeTargets.Method)]
+    internal class TestJitAttribute : JitAopAttribute
+    {
+        public override void Before(MethodReflector method, object instance, params object[] param)
+        {
+            Console.WriteLine($"Before Name:{method.Name}");
+        }
+
+        public override void After(MethodReflector method, Exception exception, object instance, params object[] param)
+        {
+            Console.WriteLine($"After Name:{method.Name}");
+        }
+
+        public override Task BeforeAsync(MethodReflector method, object instance, params object[] param)
+        {
+            Console.WriteLine($"BeforeAsync Name:{method.Name}");
+            return Task.CompletedTask;
+        }
+
+        public override Task AfterAsync(MethodReflector method, Exception exception, object instance, params object[] param)
+        {
+            Console.WriteLine($"AfterAsync Name:{method.Name}");
+            return Task.CompletedTask;
+        }
+    }
+```
+### Edit TestClass
+```csharp
+    [JitInject]
+    public class TestClass: ITestClass
+    {
+        [TestJit]
+        public string Hello()
+        {
+            Console.WriteLine("Hello");
+            return "Hello";
+        }
+        
+        ///...
+    }
+```
+# cutom Actor
+```csharp
+    public class TestActors : IAopActors
+    {
+        public object Execute(AopContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TResult> ExecuteAsync<TResult>(AopContext context)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task InvokeAsync(AopContext context)
+        {
+            throw new NotImplementedException();
+        }
+    }
+```
+
+## Use TestAopActors
+```csharp
+    [AopActors(typeof(TestActors))]
+    public interface ITestClass
+    {
+        string Hello();
+        Task<int> ResultIntAsync();
+        Task ReturnAsync();
+    }
+```
+# Run
+## Under Asp.net Core 3.0
+edit Startup.cs
+```csharp
+   public IServiceProvider ConfigureServices(IServiceCollection services)
+   {
+      //...
+      services.AddSingleton<ITestClass, TestClass>();
+      return services.BuilderJit();
+   }
+```
+# Asp.net Core 3.0
+edit Program.cs
+```csharp
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseServiceProviderFactory(new JitServiceProviderFactory()) //new
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                });
+```
+edit Startup.cs
+add Method
+```csharp
+        public void ConfigureContainer(JitAopBuilder builder)
+        {
+            builder.Add<ITestClass, TestClass>(ServiceLifetime.Singleton);
+        }
+```
