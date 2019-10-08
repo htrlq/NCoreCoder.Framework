@@ -55,7 +55,7 @@
     }
 ```
 ## class TestClass add aop
-method Hello add default aop, but custom, add attribute inherit JitAopAttribute
+method "Hello" add default aop, but custom, add attribute inherit JitAopAttribute
 support async method and sync method
 ```csharp
     [AttributeUsage(AttributeTargets.Method)]
