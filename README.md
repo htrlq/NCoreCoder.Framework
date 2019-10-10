@@ -1,28 +1,29 @@
 # NCoreCoder.Framework
-> Author NCoreCode
->> [My Blog](https://www.cnblogs.com/NCoreCoder/)
+> 作者 NCoreCode
+>> [我的博客](https://www.cnblogs.com/NCoreCoder/)
 
-# Develoment Tasks
+# 开发任务
 * 2019/9/9
-*  Add Aop(Aspect Oriented Programming)
-[Sample](https://www.cnblogs.com/NCoreCoder/p/11492755.html)
+* 增加AOP(Aspect Oriented Programming，面向切面编程)
+* [例子](https://www.cnblogs.com/NCoreCoder/p/11492755.html)
 * 2019/9/10
-* Add propety inject, Update Reflection for [AspectCore.Extensions.Reflection](https://github.com/dotnetcore/AspectCore-Framework)
+* 增加属性注入, 使用反射优化 [AspectCore.Extensions.Reflection](https://github.com/dotnetcore/AspectCore-Framework)
 * 2019/9/23
-* Add Emit Build Aop Proxy class [Sample](https://www.cnblogs.com/NCoreCoder/p/11572463.html)
+* 增加Emit代理AOP（之前的代理是基于DispatchProxy，DispatchProxy不支持构造器注入，才增加的属性注入） 
+* [例子](https://www.cnblogs.com/NCoreCoder/p/11572463.html)
 * 2019/9/25
-* Add Support .Net Core 3.0
-* Add Auto Inject Aop
-* [Sample](https://www.cnblogs.com/NCoreCoder/p/11586797.html)
+* 增加Asp.Net Core 3.0支持，[原理参考](https://www.cnblogs.com/NCoreCoder/p/11641773.html)
+* 增加自动注入AOP功能
+* [例子](https://www.cnblogs.com/NCoreCoder/p/11586797.html)
 * 2019/9/26
-* Add Custom Aop Actors
+* 增加自定义AOP执行器
 * 2019/10/8
-* Attribute Edit, method contains After、AfterAsync, Add Paramater Execption
-* IAopActors and DefaultActors Edit, All Add Paramater Func Delegate
-* Fixing Target Class Rename Problem
-* [Sample](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
+* 特性修改, 对After、AfterAsync方法增加了一个处理异常的参数
+* 对于IAopActors、DefaultActors的所有参数，增加了一个委托回调的参数
+* 修复目标类重名问题
+* [例子](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
 * 2019/10/10
-* Proxy Instance Add Property Clone Support
+* 代理类增加了属性克隆支持
 
 # Code Sample
 ```csharp
