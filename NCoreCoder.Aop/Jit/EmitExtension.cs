@@ -22,7 +22,7 @@ namespace NCoreCoder.Aop
             "Finalize"
         };
 
-        public static void InjectConstructorNoProperty(this Type sourceType,
+        public static void InjectConstructor(this Type sourceType,
             Type targetType, TypeBuilder typeBuilder,
             params FieldBuilder[] paramArray
          )
@@ -50,47 +50,6 @@ namespace NCoreCoder.Aop
                 ilGenerator.Emit(OpCodes.Ldarg_0);
                 ilGenerator.EmitLoadArg(index + 1);
                 ilGenerator.Emit(OpCodes.Stfld, paramArray[index]);
-            }
-
-            ilGenerator.Emit(OpCodes.Ret);
-        }
-
-        public static void InjectConstructor(this Type sourceType,
-            Type targetType, TypeBuilder typeBuilder,
-            MemberInfo[] paramArray
-        )
-        {
-            if (sourceType.GetConstructors().Length > 1)
-                throw new Exception($"Constructor Count > 1");
-
-            var ctorMethod = typeof(object).GetConstructor(Type.EmptyTypes);
-            var argsList = paramArray.Select(_field => _field.ReflectedType).ToList();
-
-            var method = typeBuilder.DefineConstructor(MethodAttributes.Public, typeof(object).GetReflector().GetMemberInfo().GetConstructors().Single().CallingConvention, argsList.ToArray());
-            // ReSharper disable once PossibleNullReferenceException
-
-            var ilGenerator = method.GetILGenerator();
-
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            
-            //ReSharper disable once AssignNullToNotNullAttribute
-            ilGenerator.Emit(OpCodes.Call, ctorMethod);
-            ilGenerator.Emit(OpCodes.Nop);
-            ilGenerator.Emit(OpCodes.Nop);
-
-            for (var index = 0; index < argsList.Count; index++)
-            {
-                ilGenerator.Emit(OpCodes.Ldarg_0);
-                ilGenerator.EmitLoadArg(index + 1);
-
-                if (paramArray[index] is FieldBuilder field)
-                    ilGenerator.Emit(OpCodes.Stfld, field);
-
-                if (paramArray[index] is PropertyBuilder property)
-                {
-                    var _field = sourceType.GetField($"_{property.Name}");
-                    ilGenerator.Emit(OpCodes.Stfld, _field);
-                }
             }
 
             ilGenerator.Emit(OpCodes.Ret);

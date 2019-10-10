@@ -53,21 +53,7 @@ namespace NCoreCoder.Aop
             var serviceProvider = typeBuilder.DefineField("_serviceProvider", typeof(IServiceProvider), FieldAttributes.Private);
             var instance = typeBuilder.DefineField("_instance", targetType, FieldAttributes.Private);
 
-            var ctor = sourceType.GetConstructors().FirstOrDefault();
-
-            //if (ctor.GetParameters().Length > 0)
-            //{
-            //    var parameters = ctor.GetParameters().Select(_param => _param.ParameterType).ToArray();
-
-            //    var paramList = new List<MemberInfo>
-            //    {
-            //        actors,
-            //        serviceProvider,
-            //        instance
-            //    };
-            //}
-            //else
-                targetType.InjectConstructorNoProperty(targetType, typeBuilder, actors, serviceProvider, instance);
+           targetType.InjectConstructor(targetType, typeBuilder, actors, serviceProvider, instance);
 
             targetType.InjectMethod(typeBuilder,
                 actors,serviceProvider,instance
