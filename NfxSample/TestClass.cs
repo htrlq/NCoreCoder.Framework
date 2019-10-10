@@ -7,6 +7,13 @@ namespace NfxSample
     [JitInject]
     public class TestClass: ITestClass
     {
+        public ITest Test { get; set; }
+
+        public TestClass(ITest test)
+        {
+            Test = test;
+        }
+
         [JitAop]
         public string Hello()
         {
@@ -29,8 +36,40 @@ namespace NfxSample
 
     public interface ITestClass
     {
+        ITest Test { get; set; }
         string Hello();
         Task<int> ResultIntAsync();
         Task ReturnAsync();
+    }
+
+    public class TestClassInject : ITestClass
+    {
+        public ITest Test
+        {
+            get { return _intance.Test; }
+            set { _intance.Test = value; }
+        }
+
+        private TestClass _intance;
+
+        public TestClassInject(TestClass intance)
+        {
+            _intance = intance;
+        }
+
+        public string Hello()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<int> ResultIntAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task ReturnAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

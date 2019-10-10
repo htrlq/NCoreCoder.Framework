@@ -13,13 +13,14 @@ namespace NfxSample
         {
             IServiceCollection services = new ServiceCollection();
 
-            services.AddAutoInject(Assembly.GetCallingAssembly());
-            //services.AddSingleton<ITestClass, TestClass>();
+            //services.AddAutoInject(Assembly.GetCallingAssembly());
+            services.AddSingleton<ITest, Test>();
+            services.AddSingleton<ITestClass, TestClass>();
 
             var serviceProvider = services.BuilderJit();
-            var instance = serviceProvider.GetRequiredService<ITest>();
+            var instance = serviceProvider.GetRequiredService<ITestClass>();
 
-            //Test(instance);
+            Test(instance);
 
             Console.ReadLine();
         }
@@ -37,6 +38,10 @@ namespace NfxSample
 
             if (!hello.Equals("Hello"))
                 throw new Exception($"Assert not Equals");
+
+            var test = testClass.Test;
+
+            test.Hello();
         }
     }
 
@@ -45,7 +50,7 @@ namespace NfxSample
         void Hello();
     }
 
-    [Scoped(typeof(ITest))]
+    [JitInject]
     internal class Test:ITest
     {
         public void Hello()

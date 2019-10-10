@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 
 namespace NCoreCoder.Aop
 {
-    internal class MethodInfoExtension
+    internal static class MethodInfoExtension
     {
         public static readonly MethodInfo Invoke =
             typeof(MethodBase).GetMethod("Invoke", new[] {typeof(object), typeof(object[])});
@@ -20,5 +21,12 @@ namespace NCoreCoder.Aop
             {
                 typeof(Type)
             });
+
+        public static Type[] GetParameterTypes(this MethodInfo methodInfo)
+        {
+            var result = methodInfo.GetParameters().Select(parameterInfo => parameterInfo.ParameterType).ToArray();
+
+            return result;
+        }
     }
 }

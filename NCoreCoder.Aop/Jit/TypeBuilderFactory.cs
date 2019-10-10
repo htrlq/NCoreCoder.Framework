@@ -1,6 +1,6 @@
-﻿//#define _Nfx
-using System;
+﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -49,28 +49,31 @@ namespace NCoreCoder.Aop
 
             var typeBuilder = _moduleBuilder.DefineType(typeName, TypeAttributes.Class | TypeAttributes.Sealed, typeof(object), targetType.GetInterfaces());
 
-            var types = new Type[]
-            {
-                actorsType,
-                typeof(IServiceProvider),
-                targetType,
-            };
-
             var actors = typeBuilder.DefineField("_actors", actorsType, FieldAttributes.Private);
             var serviceProvider = typeBuilder.DefineField("_serviceProvider", typeof(IServiceProvider), FieldAttributes.Private);
             var instance = typeBuilder.DefineField("_instance", targetType, FieldAttributes.Private);
 
-            // ReSharper disable once UseMethodAny.2
-            //var context = typeBuilder.DefineField("_context", typeof(AopActors), FieldAttributes.Private);
-            //var methods = typeBuilder.DefineField("_methods", typeof(MethodInfo[]), FieldAttributes.Private);
-            //var instance = typeBuilder.DefineField("_instance", targetType, FieldAttributes.Private);
-            //var serviceProvider = typeBuilder.DefineField("_serviceProvider", typeof(IServiceProvider), FieldAttributes.Private);
+            var ctor = sourceType.GetConstructors().FirstOrDefault();
 
-            targetType.InjectConstructor(targetType, typeBuilder, actors, serviceProvider, instance);
+            //if (ctor.GetParameters().Length > 0)
+            //{
+            //    var parameters = ctor.GetParameters().Select(_param => _param.ParameterType).ToArray();
+
+            //    var paramList = new List<MemberInfo>
+            //    {
+            //        actors,
+            //        serviceProvider,
+            //        instance
+            //    };
+            //}
+            //else
+                targetType.InjectConstructorNoProperty(targetType, typeBuilder, actors, serviceProvider, instance);
 
             targetType.InjectMethod(typeBuilder,
                 actors,serviceProvider,instance
             );
+
+            targetType.InjectProperty(typeBuilder, instance);
 
 #if _Nfx
 
@@ -89,19 +92,5 @@ namespace NCoreCoder.Aop
             _assemblyBuilder.Save("1.dll");
         }
 #endif
-    }
-
-    internal static class TypeBuilderExtension
-    {
-        public static FieldBuilder[] AddRangeParam(this TypeBuilder typeBuilder, FieldAttributes fieldAttributes,
-            params Type[] types)
-        {
-            var result = types.Select(type =>
-            {
-                return typeBuilder.DefineField($"_{type.Name}", type, fieldAttributes);
-            }).ToArray();
-
-            return result;
-        }
     }
 }
