@@ -19,6 +19,7 @@
 * 2019/10/8
 * Attribute Edit, method contains After、AfterAsync, Add Paramater Execption
 * IAopActors and DefaultActors Edit, All Add Paramater Func Delegate
+* Fixing Target Class Rename Problem
 * [Sample](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
 # Code Sample
 ```csharp
