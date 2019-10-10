@@ -21,6 +21,9 @@
 * IAopActors and DefaultActors Edit, All Add Paramater Func Delegate
 * Fixing Target Class Rename Problem
 * [Sample](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
+* 2019/10/10
+* Proxy Instance Add Property Clone Support
+
 # Code Sample
 ```csharp
     //new interface
