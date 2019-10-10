@@ -67,6 +67,26 @@ namespace NCoreCoder.Aop
             }
         }
 
+        public async ValueTask<TResult> ExecuteValueAsync<TResult>()
+        {
+            var aopAttribute = MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>();
+
+            await aopAttribute.BeforeAsync(MethodInfo.GetReflector(), Args);
+
+            try
+            {
+                var result = await (Task<TResult>)MethodInfo.GetReflector().Invoke(Instance, Args);
+                await aopAttribute.AfterAsync(MethodInfo.GetReflector(), null, Instance, Args);
+
+                return result;
+            }
+            catch (Exception e)
+            {
+                await aopAttribute.AfterAsync(MethodInfo.GetReflector(), e, Instance, Args);
+                throw;
+            }
+        }
+
         public async Task InvokeAsync()
         {
             var aopAttribute = MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>();
@@ -84,5 +104,25 @@ namespace NCoreCoder.Aop
                 throw;
             }
         }
+
+#if NETSTANDARD
+        public async ValueTask InvokeValueAsync()
+        {
+            var aopAttribute = MethodInfo.GetReflector().GetCustomAttribute<JitAopAttribute>();
+
+            await aopAttribute.BeforeAsync(MethodInfo.GetReflector(), Args);
+
+            try
+            {
+                await (Task)MethodInfo.GetReflector().Invoke(Instance, Args);
+                await aopAttribute.AfterAsync(MethodInfo.GetReflector(), null, Instance, Args);
+            }
+            catch (Exception e)
+            {
+                await aopAttribute.AfterAsync(MethodInfo.GetReflector(), e, Instance, Args);
+                throw;
+            }
+        }
+#endif
     }
 }

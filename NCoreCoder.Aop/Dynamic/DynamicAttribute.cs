@@ -12,25 +12,22 @@ namespace NCoreCoder.Aop
     [AttributeUsage(AttributeTargets.Method)]
     public class DynamicAttribute:Attribute
     {
-#if DEBUG
-        public bool IsBefore { get; set; }
-        public bool IsAfter { get; set; }
-#endif
-
         protected virtual Task AfterAsync(MethodReflector targetMethod, object[] args)
         {
-#if DEBUG
-            IsAfter = true;
+#if NETSTANDARD
+            return Task.CompletedTask;    
+#else
+            return Task.Run(() => { });
 #endif
-            return Task.CompletedTask;
         }
 
         protected virtual Task BeforeAsync(MethodReflector targetMethod, object[] args)
         {
-#if DEBUG
-            IsBefore = true;
+#if NETSTANDARD
+            return Task.CompletedTask;    
+#else
+            return Task.Run(() => { });
 #endif
-            return Task.CompletedTask;
         }
 
         public async Task<object> ExecuteAsync(MethodReflector targetMethod, object instance, object[] args)

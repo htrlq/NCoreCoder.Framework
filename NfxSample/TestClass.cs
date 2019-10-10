@@ -30,7 +30,12 @@ namespace NfxSample
         public Task ReturnAsync()
         {
             Console.WriteLine("ReturnAsync");
-            return Task.CompletedTask;
+            return Task.Run(()=>{});
+        }
+
+        public ValueTask<int> ReturnValueTask()
+        {
+            return new ValueTask<int>(100);
         }
     }
 
@@ -40,6 +45,7 @@ namespace NfxSample
         string Hello();
         Task<int> ResultIntAsync();
         Task ReturnAsync();
+        ValueTask<int> ReturnValueTask();
     }
 
     public class TestClassInject : ITestClass
@@ -68,6 +74,11 @@ namespace NfxSample
         }
 
         public Task ReturnAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ValueTask<int> ReturnValueTask()
         {
             throw new NotImplementedException();
         }

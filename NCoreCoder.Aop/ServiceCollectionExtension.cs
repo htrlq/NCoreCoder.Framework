@@ -10,6 +10,7 @@ namespace NCoreCoder.Aop
 {
     public static class ServiceCollectionExtension
     {
+#if NETSTANDARD
         public static IServiceCollection AddDynamicAop<TService, TImplementation>(this IServiceCollection services, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
             where TService : class
             where TImplementation : class, TService
@@ -55,6 +56,7 @@ namespace NCoreCoder.Aop
         {
             return ProxyGenerator<TService, TImplementation>.Create(serviceProvider);
         }
+#endif
 
         public static IServiceProvider BuilderJit(this IServiceCollection services)
         {
@@ -120,7 +122,8 @@ namespace NCoreCoder.Aop
                     services.Add(descriptor);
             }
 
-#if _Nfx
+#if NETSTANDARD
+#else
             typeBuilderFactory.Save();
 #endif
 

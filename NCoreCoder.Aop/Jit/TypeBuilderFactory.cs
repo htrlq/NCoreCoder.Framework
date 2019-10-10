@@ -20,12 +20,12 @@ namespace NCoreCoder.Aop
         {
             _assemblyName = new AssemblyName("NCoreCoder.Aop");
             _assemblyName.Version = new Version(0, 1);
-#if _Nfx
-            _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave);
-            _moduleBuilder = _assemblyBuilder.DefineDynamicModule($"Proxy_Module", "1.dll");
-#else
+#if NETSTANDARD
             _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndCollect);
             _moduleBuilder = _assemblyBuilder.DefineDynamicModule($"Proxy_Module");
+#else
+            _assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(_assemblyName, AssemblyBuilderAccess.RunAndSave);
+            _moduleBuilder = _assemblyBuilder.DefineDynamicModule($"Proxy_Module", "1.dll");
 #endif
             _dictionary = new ConcurrentDictionary<Type, Type>();
         }
@@ -61,18 +61,18 @@ namespace NCoreCoder.Aop
 
             targetType.InjectProperty(typeBuilder, instance);
 
-#if _Nfx
-
-            var proxyType = typeBuilder.CreateType();
-#else
+#if NETSTANDARD
             var proxyType = typeBuilder.CreateTypeInfo().AsType();
+#else
+            var proxyType = typeBuilder.CreateType();
 #endif
             _dictionary.TryAdd(sourceType, proxyType);
 
             return proxyType;
         }
 
-#if _Nfx
+#if NETSTANDARD
+#else
         public void Save()
         {
             _assemblyBuilder.Save("1.dll");

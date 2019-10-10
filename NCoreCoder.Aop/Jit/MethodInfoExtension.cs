@@ -10,7 +10,11 @@ namespace NCoreCoder.Aop
             typeof(MethodBase).GetMethod("Invoke", new[] {typeof(object), typeof(object[])});
 
         public static readonly MethodInfo ExecuteAsync = typeof(DefaultAopActors).GetMethod("ExecuteAsync");
+        public static readonly MethodInfo ExecuteValueAsync = typeof(DefaultAopActors).GetMethod("ExecuteValueAsync");
         public static readonly MethodInfo InvokeAsync = typeof(DefaultAopActors).GetMethod("InvokeAsync");
+#if NETSTANDARD
+        public static readonly MethodInfo InvokeValueAsync = typeof(DefaultAopActors).GetMethod("InvokeValueAsync");
+#endif
         public static readonly MethodInfo Execute = typeof(DefaultAopActors).GetMethod("Execute");
 
         public static readonly MethodInfo GetTypeFromHandle =

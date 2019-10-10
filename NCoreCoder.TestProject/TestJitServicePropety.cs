@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NCoreCoder.Aop;
@@ -70,6 +71,13 @@ namespace NCoreCoder.TestProject
             if (!hello.Equals("Hello"))
                 throw new Exception($"Assert not Equals");
 
+            var valueAsync = await services.ValueIntAsync();
+            Assert.Equal<int>(1000, valueAsync);
+
+            var stringBuild = await services.StringBuilderAsync();
+            var value = stringBuild.ToString();
+            Assert.Equal<string>("hello", value);
+
             var test = services.Test;
 
             await DebugTestAsync(test);
@@ -119,6 +127,16 @@ namespace NCoreCoder.TestProject
             Console.WriteLine("ReturnAsync");
             return Task.CompletedTask;
         }
+
+        public ValueTask<int> ValueIntAsync()
+        {
+            return new ValueTask<int>(1000);
+        }
+
+        public ValueTask<StringBuilder> StringBuilderAsync()
+        {
+            return new ValueTask<StringBuilder>(new StringBuilder("hello"));
+        }
     }
 
     public interface ITestClass
@@ -127,5 +145,7 @@ namespace NCoreCoder.TestProject
         string Hello();
         Task<int> ResultIntAsync();
         Task ReturnAsync();
+        ValueTask<int> ValueIntAsync();
+        ValueTask<StringBuilder> StringBuilderAsync();
     }
 }

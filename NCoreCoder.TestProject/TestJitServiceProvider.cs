@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NCoreCoder.Aop;
@@ -21,15 +22,7 @@ namespace NCoreCoder.TestProject
 
             var test = instance.GetRequriedService<IJitService>();
 
-            test.TestVoid();
-
-            var resultInt = test.TestInt();
-            Assert.Equal<int>(1000, resultInt);
-
-            await test.TestAsync();
-
-            var asyncInt = await test.TestIntAsync();
-            Assert.Equal<int>(900, asyncInt);
+            await DebugAsync(test);
         }
 
         [Fact]
@@ -46,15 +39,7 @@ namespace NCoreCoder.TestProject
 
             var test = instance.GetRequriedService<IJitService>();
 
-            test.TestVoid();
-
-            var resultInt = test.TestInt();
-            Assert.Equal<int>(1000, resultInt);
-
-            await test.TestAsync();
-
-            var asyncInt = await test.TestIntAsync();
-            Assert.Equal<int>(900, asyncInt);
+            await DebugAsync(test);
         }
 
         [Fact]
@@ -73,16 +58,28 @@ namespace NCoreCoder.TestProject
             {
                 var test = serviceScope.GetRequriedService<IJitService>();
 
-                test.TestVoid();
-
-                var resultInt = test.TestInt();
-                Assert.Equal<int>(1000, resultInt);
-
-                await test.TestAsync();
-
-                var asyncInt = await test.TestIntAsync();
-                Assert.Equal<int>(900, asyncInt);
+                await DebugAsync(test);
             }
+        }
+
+        private async Task DebugAsync(IJitService test)
+        {
+            test.TestVoid();
+
+            var resultInt = test.TestInt();
+            Assert.Equal<int>(1000, resultInt);
+
+            await test.TestAsync();
+
+            var asyncInt = await test.TestIntAsync();
+            Assert.Equal<int>(900, asyncInt);
+
+            var valueAsync = await test.ValueIntAsync();
+            Assert.Equal<int>(1000,valueAsync);
+
+            var stringBuild = await test.StringBuilderAsync();
+            var value = stringBuild.ToString();
+            Assert.Equal<string>("hello", value);
         }
     }
 
@@ -92,6 +89,8 @@ namespace NCoreCoder.TestProject
         int TestInt();
         Task TestAsync();
         Task<int> TestIntAsync();
+        ValueTask<int> ValueIntAsync();
+        ValueTask<StringBuilder> StringBuilderAsync();
     }
 
     [JitInject]
@@ -117,6 +116,16 @@ namespace NCoreCoder.TestProject
         public Task<int> TestIntAsync()
         {
             return Test.TestIntAsync();
+        }
+
+        public ValueTask<int> ValueIntAsync()
+        {
+            return new ValueTask<int>(1000);
+        }
+
+        public ValueTask<StringBuilder> StringBuilderAsync()
+        {
+            return new ValueTask<StringBuilder>(new StringBuilder("hello"));
         }
 
         public void TestVoid()

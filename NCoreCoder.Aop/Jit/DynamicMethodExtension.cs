@@ -14,7 +14,12 @@ namespace NCoreCoder.Aop
         )
         {
             var returnType = methodInfo.ReturnType;
-            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task);
+#if NETSTANDARD
+            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task) || returnType == typeof(ValueTask) || 
+                          (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
+#else
+            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task) || (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
+#endif
             var funcType = ExpressionExtension.CreateFuncType(isAsync ? returnType : typeof(object));
 
             var method = ilGenerator.DeclareLocal(typeof(MethodInfo));
@@ -28,12 +33,12 @@ namespace NCoreCoder.Aop
                 .Select(_parameter => _parameter.ParameterType)
                 .ToArray();
 
-            #region methodInfo
+#region methodInfo
             ilGenerator.EmitMethod(methodInfo);
             ilGenerator.Emit(OpCodes.Stloc_0, method);
-            #endregion
+#endregion
 
-            #region args
+#region args
             ilGenerator.AddLdcI4(paramTypes.Length);
             ilGenerator.Emit(OpCodes.Newarr, typeof(object));
 
@@ -52,20 +57,20 @@ namespace NCoreCoder.Aop
             }
 
             ilGenerator.Emit(OpCodes.Stloc, parameters);
-            #endregion
+#endregion
 
-            #region Delegate
+#region Delegate
             ilGenerator.Emit(OpCodes.Ldtoken, isAsync ? returnType : typeof(object));
             ilGenerator.Emit(OpCodes.Call, MethodInfoExtension.GetTypeFromHandle);
             ilGenerator.Emit(OpCodes.Call, MethodInfoExtension.BuilderDelegate);
             ilGenerator.Emit(OpCodes.Stloc, _delegate);
-            #endregion
+#endregion
 
-            #region Convert To Func
+#region Convert To Func
             ilGenerator.Emit(OpCodes.Ldloc, _delegate);
             ilGenerator.Emit(OpCodes.Castclass, funcType);
             ilGenerator.Emit(OpCodes.Stloc, _func);
-            #endregion
+#endregion
 
             ilGenerator.Emit(OpCodes.Ldarg_0);
             ilGenerator.Emit(OpCodes.Ldfld, _actors);
@@ -77,7 +82,7 @@ namespace NCoreCoder.Aop
             ilGenerator.Emit(OpCodes.Ldloc, method);
             ilGenerator.Emit(OpCodes.Ldloc, parameters);
 
-            #region AopContext
+#region AopContext
             ilGenerator.Emit(OpCodes.Newobj, typeof(AopContext).GetConstructor(new[]
             {
                 typeof(IServiceProvider),
@@ -85,7 +90,7 @@ namespace NCoreCoder.Aop
                 typeof(MethodInfo),
                 typeof(object[])
             }));
-            #endregion
+#endregion
 
             if (isAsync)
             {
@@ -94,27 +99,37 @@ namespace NCoreCoder.Aop
                     var typeInfo = returnType.GetTypeInfo();
                     var genericTypeDefinition = typeInfo.GetGenericArguments().Single();
 
-                    ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.ExecuteAsync.MakeGenericMethod(genericTypeDefinition));
+                    if (returnType.BaseType == typeof(ValueType))
+                        ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.ExecuteValueAsync.MakeGenericMethod(genericTypeDefinition));
+                    else
+                        ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.ExecuteAsync.MakeGenericMethod(genericTypeDefinition));
                 }
                 else
                 {
+#if NETSTANDARD
+                    if (returnType == typeof(ValueTask))
+                        ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.InvokeValueAsync);
+                    else
+                        ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.InvokeAsync);
+#else
                     ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.InvokeAsync);
+#endif
                 }
             }
             else
             {
                 //_actor.Execute(_invoke,context);
                 ilGenerator.Emit(OpCodes.Callvirt, MethodInfoExtension.Execute);
+
+                if (returnType == typeof(void))
+                    ilGenerator.Emit(OpCodes.Pop);
+
+                if (returnType != typeof(void) && returnType.IsValueType)
+                    ilGenerator.Emit(OpCodes.Unbox_Any, returnType);
+
+                if (!isAsync && returnType.IsGenericType)
+                    ilGenerator.Emit(OpCodes.Castclass, returnType);
             }
-
-            if (returnType == typeof(void))
-                ilGenerator.Emit(OpCodes.Pop);
-
-            if (returnType != typeof(void) && returnType.IsValueType)
-                ilGenerator.Emit(OpCodes.Unbox_Any, returnType);
-
-            if (!isAsync && returnType.IsGenericType)
-                ilGenerator.Emit(OpCodes.Castclass, returnType);
 
             ilGenerator.Emit(OpCodes.Ret);
         }

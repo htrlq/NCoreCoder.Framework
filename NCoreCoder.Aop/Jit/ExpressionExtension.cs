@@ -59,7 +59,12 @@ namespace NCoreCoder.Aop
 
         public static Delegate BuilderDelegate(Type returnType)
         {
-            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task);
+#if NETSTANDARD
+            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task) || returnType == typeof(ValueTask) ||
+                          (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
+#else
+            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task) || (returnType.IsGenericType && returnType.GetGenericTypeDefinition() == typeof(ValueTask<>));
+#endif
 
             if (_delegates.TryGetValue(returnType, out Delegate _delegate))
                 return _delegate;

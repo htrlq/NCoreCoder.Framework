@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NCoreCoder.Aop;
 using Newtonsoft.Json;
@@ -38,6 +39,8 @@ namespace NfxSample
 
             if (!hello.Equals("Hello"))
                 throw new Exception($"Assert not Equals");
+
+            var _result = await testClass.ReturnValueTask();
 
             var test = testClass.Test;
 

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace NCoreCoder.Aop
 {
+#if NETSTANDARD
     public class ProxyGenerator<TService, TImplementation> : DispatchProxy
         where TImplementation:TService
     {
@@ -50,20 +51,11 @@ namespace NCoreCoder.Aop
                 var awaiter = task.ConfigureAwait(true).GetAwaiter();
                 var result = awaiter.GetResult();
 
-#if DEBUG
-                if (!(aopAttribute.IsBefore && aopAttribute.IsAfter))
-                {
-                    aopAttribute.IsBefore = false;
-                    aopAttribute.IsAfter = false;
-
-                    throw new Exception($"Execute Error");
-                }
-#endif
-
                 return result;
             }
 
             return targetMethod.Invoke(_instance, args);
         }
     }
+#endif
 }

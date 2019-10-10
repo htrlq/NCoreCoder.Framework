@@ -21,13 +21,21 @@ namespace NCoreCoder.Aop
         public virtual Task BeforeAsync(MethodReflector method, object instance, params object[] param)
         {
             Console.WriteLine($"BeforeAsync Name:{method.Name}");
-            return Task.CompletedTask;
+#if NETSTANDARD
+            return Task.CompletedTask;    
+#else
+            return Task.Run(() => { });
+#endif
         }
 
         public virtual Task AfterAsync(MethodReflector method, Exception exception, object instance, params object[] param)
         {
             Console.WriteLine($"AfterAsync Name:{method.Name}");
-            return Task.CompletedTask;
+#if NETSTANDARD
+            return Task.CompletedTask;    
+#else
+            return Task.Run(() => { });
+#endif
         }
     }
 }
