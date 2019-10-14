@@ -17,16 +17,16 @@ namespace NCoreCoder.Aop
 #if NETSTANDARD
             return Task.CompletedTask;    
 #else
-            return Task.Run(() => { });
+            return Task.FromResult<object>(null);
 #endif
         }
 
         protected virtual Task BeforeAsync(MethodReflector targetMethod, object[] args)
         {
 #if NETSTANDARD
-            return Task.CompletedTask;    
+            return Task.CompletedTask;
 #else
-            return Task.Run(() => { });
+            return Task.FromResult<object>(null);
 #endif
         }
 
