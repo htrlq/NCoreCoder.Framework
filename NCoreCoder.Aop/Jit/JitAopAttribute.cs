@@ -24,7 +24,7 @@ namespace NCoreCoder.Aop
 #if NETSTANDARD
             return Task.CompletedTask;    
 #else
-            return Task.Run(() => { });
+            return Task.FromResult<object>(null);
 #endif
         }
 
@@ -34,7 +34,7 @@ namespace NCoreCoder.Aop
 #if NETSTANDARD
             return Task.CompletedTask;    
 #else
-            return Task.Run(() => { });
+            return Task.FromResult<object>(null);
 #endif
         }
     }

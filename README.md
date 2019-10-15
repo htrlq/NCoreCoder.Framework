@@ -24,6 +24,8 @@
 * [例子](https://www.cnblogs.com/NCoreCoder/p/11634642.html)
 * 2019/10/10
 * 代理类增加了属性克隆支持
+* 增加ValueTask支持
+* 增加双版本支持 .Net Standard 2.0\.Net Framework 4.5
 
 # Code Sample
 ```csharp
